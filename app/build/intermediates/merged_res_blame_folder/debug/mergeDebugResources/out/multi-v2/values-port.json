@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.naijaayo.worldwide.app-mergeDebugResources-26:/values-port/values-port.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\SAM\\.gradle\\caches\\9.0-milestone-1\\transforms\\1c37868fa60d8dd4eef074f57e44d391\\transformed\\appcompat-1.4.1\\res\\values-port\\values-port.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "55",
+                        "endOffsets": "106"
+                    }
+                }
+            ]
+        }
+    ]
+}

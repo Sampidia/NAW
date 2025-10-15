@@ -1,0 +1,178 @@
+[
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\drawable_icon_eye.png.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\drawable\\icon_eye.png"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\drawable_icon_brain.png.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\drawable\\icon_brain.png"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\drawable_pit_background_active.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\drawable\\pit_background_active.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\xml_backup_rules.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\xml\\backup_rules.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\drawable_char_ada_portrait.png.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\drawable\\char_ada_portrait.png"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-hdpi_ic_launcher_foreground.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-hdpi\\ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-xxhdpi_ic_launcher.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-xxhdpi\\ic_launcher.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-xhdpi_ic_launcher_foreground.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-xhdpi\\ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\layout_room_list_item.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\layout\\room_list_item.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\drawable_ic_launcher_background.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\drawable\\ic_launcher_background.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\drawable_char_ayo_full.png.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\drawable\\char_ayo_full.png"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-hdpi_ic_launcher_round.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-hdpi\\ic_launcher_round.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-mdpi_ic_launcher_foreground.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-mdpi\\ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-xhdpi_ic_launcher_round.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-xhdpi\\ic_launcher_round.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\drawable_pit_background.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\drawable\\pit_background.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\xml_data_extraction_rules.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\xml\\data_extraction_rules.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\layout_activity_leaderboard.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\layout\\activity_leaderboard.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\drawable_char_ai_portrait.png.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\drawable\\char_ai_portrait.png"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-xxxhdpi_ic_launcher_foreground.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-xxxhdpi\\ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\drawable_char_ada_full.png.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\drawable\\char_ada_full.png"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\layout_leaderboard_item.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\layout\\leaderboard_item.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\menu_game_menu.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\menu\\game_menu.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\layout_activity_profile.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\layout\\activity_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\layout_activity_multiplayer_lobby.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\layout\\activity_multiplayer_lobby.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\drawable_char_fatima_full.png.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\drawable\\char_fatima_full.png"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-xxhdpi_ic_launcher_foreground.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-xxhdpi\\ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-mdpi_ic_launcher.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-mdpi\\ic_launcher.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\drawable_char_fatima_portrait.png.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\drawable\\char_fatima_portrait.png"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\drawable_char_ayo_portrait.png.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\drawable\\char_ayo_portrait.png"
+    },
+    {
+        "merged": "com.naijaayo.worldwide.app-debug-28:/layout_activity_main.xml.flat",
+        "source": "com.naijaayo.worldwide.app-main-30:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.naijaayo.worldwide.app-debug-28:/drawable_logo.png.flat",
+        "source": "com.naijaayo.worldwide.app-main-30:/drawable/logo.png"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-mdpi_ic_launcher_round.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-mdpi\\ic_launcher_round.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\drawable_icon_communication.png.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\drawable\\icon_communication.png"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-xxxhdpi_ic_launcher_round.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-xxxhdpi\\ic_launcher_round.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-hdpi_ic_launcher.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-hdpi\\ic_launcher.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\xml_network_security_config.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\xml\\network_security_config.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-xxhdpi_ic_launcher_round.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-xxhdpi\\ic_launcher_round.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-anydpi-v26\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-xhdpi_ic_launcher.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-xhdpi\\ic_launcher.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\layout_activity_main_menu.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\layout\\activity_main_menu.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-xxxhdpi_ic_launcher.webp.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-xxxhdpi\\ic_launcher.webp"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-debug-28:\\layout-land_activity_profile.xml.flat",
+        "source": "C:\\Users\\SAM\\.gradle\\daemon\\9.0-milestone-1\\com.naijaayo.worldwide.app-main-30:\\layout-land\\activity_profile.xml"
+    }
+]
