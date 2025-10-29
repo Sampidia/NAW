@@ -4,8 +4,10 @@ services:
     runtime: docker
     dockerfilePath: ./server/Dockerfile
     envVars:
-      - key: DATABASE_URL
+      - key: MONGODB_URI
         sync: false # Set this manually in Render dashboard
+      - key: MONGODB_DATABASE
+        value: naija_ayo
       - key: JWT_SECRET
         generateValue: true # Render will generate a secure random value
     healthCheckPath: /
@@ -14,8 +16,4 @@ services:
       mountPath: /data
       sizeGB: 10
 
-databases:
-  - name: naija-ayo-db
-    databaseName: naija_ayo
-    user: naija_ayo_user
-    plan: starter
+# Using MongoDB Atlas - no Render managed database needed

@@ -24,11 +24,10 @@ dependencies {
     implementation("io.ktor:ktor-server-cors-jvm:2.3.7")
     implementation("io.ktor:ktor-server-call-logging-jvm:2.3.7")
 
-    // Database dependencies
-    implementation("org.jetbrains.exposed:exposed-core:0.49.0")
-    implementation("org.jetbrains.exposed:exposed-dao:0.49.0")
-    implementation("org.jetbrains.exposed:exposed-jdbc:0.49.0")
-    implementation("org.postgresql:postgresql:42.7.3")
+    // MongoDB dependencies
+    implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.0")
+    implementation("org.mongodb:mongodb-driver-core:4.11.0")
+    implementation("org.mongodb:bson:4.11.0")
 
     // Password hashing
     implementation("at.favre.lib:bcrypt:0.10.2")

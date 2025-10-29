@@ -20,8 +20,8 @@ import java.time.LocalDateTime
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.module() {
-    // Initialize database
-    initDatabase()
+    // Initialize MongoDB
+    val mongoService = MongoService()
 
     // Configure CORS
     install(io.ktor.server.plugins.cors.routing.CORS) {
@@ -38,7 +38,7 @@ fun Application.module() {
     }
 
     // Configure authentication
-    val authService = AuthService()
+    val authService = MongoAuthService(mongoService)
     install(Authentication) {
         jwt("auth-jwt") {
             verifier(authService.algorithm)
@@ -59,7 +59,7 @@ fun Application.module() {
     configureRouting(authService)
 }
 
-fun Application.configureRouting(authService: AuthService) {
+fun Application.configureRouting(authService: MongoAuthService) {
     val rooms = ConcurrentHashMap<String, Room>()
     val gameStates = ConcurrentHashMap<String, GameState>()
     val userSessions = ConcurrentHashMap<String, DefaultWebSocketSession>()
@@ -105,22 +105,20 @@ fun Application.configureRouting(authService: AuthService) {
                 val userId = call.parameters["userId"] ?: return@get call.respondText("Missing userId", status = HttpStatusCode.BadRequest)
 
                 try {
-                    val friends = transaction {
-                        Friends.select { Friends.userId eq userId }
-                            .map {
-                                Friend(
-                                    id = it[Friends.id],
-                                    userId = it[Friends.userId],
-                                    friendId = it[Friends.friendId],
-                                    friendUsername = it[Friends.friendUsername],
-                                    friendEmail = it[Friends.friendEmail],
-                                    friendAvatarId = it[Friends.friendAvatarId],
-                                    status = it[Friends.status],
-                                    createdAt = it[Friends.createdAt].toString(),
-                                    lastSeen = it[Friends.lastSeen].toString(),
-                                    isOnline = it[Friends.isOnline]
-                                )
-                            }
+                    val mongoFriends = mongoService.getFriends(userId)
+                    val friends = mongoFriends.map {
+                        Friend(
+                            id = it.id,
+                            userId = it.userId,
+                            friendId = it.friendId,
+                            friendUsername = it.friendUsername,
+                            friendEmail = it.friendEmail,
+                            friendAvatarId = it.friendAvatarId,
+                            status = it.status,
+                            createdAt = it.createdAt,
+                            lastSeen = it.lastSeen,
+                            isOnline = it.isOnline
+                        )
                     }
                     call.respond(friends)
                 } catch (e: Exception) {
@@ -137,17 +135,15 @@ fun Application.configureRouting(authService: AuthService) {
                     val request = call.receive<FriendRequest>()
                     val requestId = authService.generateId()
 
-                    transaction {
-                        FriendRequests.insert {
-                            it[id] = requestId
-                            it[fromUserId] = currentUser.id
-                            it[toUserId] = request.toUserId
-                            it[fromUsername] = currentUser.username
-                            it[fromEmail] = currentUser.email
-                            it[fromAvatarId] = currentUser.avatarId
-                            it[status] = FriendRequestStatus.PENDING
-                        }
-                    }
+                    val mongoRequest = MongoFriendRequest(
+                        fromUserId = currentUser.id,
+                        toUserId = request.toUserId,
+                        fromUsername = currentUser.username,
+                        fromEmail = currentUser.email,
+                        fromAvatarId = currentUser.avatarId,
+                        status = FriendRequestStatus.PENDING
+                    )
+                    mongoService.createFriendRequest(mongoRequest)
 
                     call.respondText("Friend request sent", status = HttpStatusCode.Created)
                 } catch (e: Exception) {
@@ -162,50 +158,44 @@ fun Application.configureRouting(authService: AuthService) {
                 val action = call.receive<Map<String, String>>()["action"]
 
                 try {
-                    val friendRequest = transaction {
-                        FriendRequests.select { FriendRequests.id eq requestId }
-                            .singleOrNull()
-                    }
+                    val mongoRequest = mongoService.getFriendRequestById(requestId)
 
-                    if (friendRequest == null) {
+                    if (mongoRequest == null) {
                         return@put call.respondText("Request not found", status = HttpStatusCode.NotFound)
                     }
 
                     when (action) {
                         "accept" -> {
+                            // Get user details for the accepting user
+                            val acceptingUser = mongoService.getUserById(userId) ?: return@put call.respondText("User not found", status = HttpStatusCode.NotFound)
+
                             // Create friendship for both users
-                            transaction {
-                                val friendship1Id = authService.generateId()
-                                val friendship2Id = authService.generateId()
+                            val friendship1 = MongoFriend(
+                                userId = mongoRequest.fromUserId,
+                                friendId = mongoRequest.toUserId,
+                                friendUsername = mongoRequest.fromUsername,
+                                friendEmail = mongoRequest.fromEmail,
+                                friendAvatarId = mongoRequest.fromAvatarId,
+                                status = FriendStatus.ACCEPTED
+                            )
 
-                                Friends.insert {
-                                    it[id] = friendship1Id
-                                    it[Friends.userId] = friendRequest[FriendRequests.fromUserId]
-                                    it[Friends.friendId] = friendRequest[FriendRequests.toUserId]
-                                    it[friendUsername] = friendRequest[FriendRequests.fromUsername]
-                                    it[friendEmail] = friendRequest[FriendRequests.fromEmail]
-                                    it[friendAvatarId] = friendRequest[FriendRequests.fromAvatarId]
-                                    it[status] = FriendStatus.ACCEPTED
-                                }
+                            val friendship2 = MongoFriend(
+                                userId = mongoRequest.toUserId,
+                                friendId = mongoRequest.fromUserId,
+                                friendUsername = acceptingUser.username,
+                                friendEmail = acceptingUser.email,
+                                friendAvatarId = acceptingUser.avatarId,
+                                status = FriendStatus.ACCEPTED
+                            )
 
-                                Friends.insert {
-                                    it[id] = friendship2Id
-                                    it[Friends.userId] = friendRequest[FriendRequests.toUserId]
-                                    it[Friends.friendId] = friendRequest[FriendRequests.fromUserId]
-                                    it[friendUsername] = userId // This should be fetched from Users table
-                                    it[friendEmail] = "" // This should be fetched from Users table
-                                    it[friendAvatarId] = "ayo" // This should be fetched from Users table
-                                    it[status] = FriendStatus.ACCEPTED
-                                }
+                            mongoService.addFriend(friendship1)
+                            mongoService.addFriend(friendship2)
 
-                                // Remove request
-                                FriendRequests.deleteWhere { FriendRequests.id eq requestId }
-                            }
+                            // Remove request
+                            mongoService.deleteFriendRequest(requestId)
                         }
                         "decline" -> {
-                            transaction {
-                                FriendRequests.deleteWhere { FriendRequests.id eq requestId }
-                            }
+                            mongoService.deleteFriendRequest(requestId)
                         }
                     }
 
@@ -221,19 +211,14 @@ fun Application.configureRouting(authService: AuthService) {
                 val currentUser = authService.getCurrentUser(call) ?: return@get call.respondText("Unauthorized", status = HttpStatusCode.Unauthorized)
 
                 try {
-                    val results = transaction {
-                        Users.select {
-                            ((Users.username.lowerCase() like "%${query.lowercase()}%") or
-                             (Users.email.lowerCase() like "%${query.lowercase()}%")) and
-                            (Users.id neq currentUser.id)
-                        }.map {
-                            User(
-                                id = it[Users.id],
-                                username = it[Users.username],
-                                email = it[Users.email],
-                                avatarId = it[Users.avatarId]
-                            )
-                        }
+                    val mongoUsers = mongoService.searchUsers(query, currentUser.id)
+                    val results = mongoUsers.map {
+                        User(
+                            id = it.id,
+                            username = it.username,
+                            email = it.email,
+                            avatarId = it.avatarId
+                        )
                     }
                     call.respond(results)
                 } catch (e: Exception) {
@@ -248,23 +233,19 @@ fun Application.configureRouting(authService: AuthService) {
 
                 try {
                     val message = call.receive<Message>()
-                    val messageId = authService.generateId()
 
-                    transaction {
-                        Messages.insert {
-                            it[id] = messageId
-                            it[fromUserId] = currentUser.id
-                            it[toUserId] = message.toUserId
-                            it[fromUsername] = currentUser.username
-                            it[content] = message.content
-                            it[timestamp] = LocalDateTime.now()
-                            it[type] = message.type
-                            it[gameInvitationRoomId] = message.gameInvitation?.roomId
-                            it[gameInvitationHostUsername] = message.gameInvitation?.hostUsername
-                            it[gameInvitationGameType] = message.gameInvitation?.gameType
-                            it[gameInvitationDifficulty] = message.gameInvitation?.difficulty
-                        }
-                    }
+                    val mongoMessage = MongoMessage(
+                        fromUserId = currentUser.id,
+                        toUserId = message.toUserId,
+                        fromUsername = currentUser.username,
+                        content = message.content,
+                        type = message.type,
+                        gameInvitationRoomId = message.gameInvitation?.roomId,
+                        gameInvitationHostUsername = message.gameInvitation?.hostUsername,
+                        gameInvitationGameType = message.gameInvitation?.gameType,
+                        gameInvitationDifficulty = message.gameInvitation?.difficulty
+                    )
+                    mongoService.saveMessage(mongoMessage)
 
                     call.respondText("Message sent", status = HttpStatusCode.Created)
                 } catch (e: Exception) {
@@ -278,30 +259,25 @@ fun Application.configureRouting(authService: AuthService) {
                 val friendId = call.parameters["friendId"] ?: return@get call.respondText("Missing friendId", status = HttpStatusCode.BadRequest)
 
                 try {
-                    val messages = transaction {
-                        Messages.select {
-                            ((Messages.fromUserId eq userId) and (Messages.toUserId eq friendId)) or
-                            ((Messages.fromUserId eq friendId) and (Messages.toUserId eq userId))
-                        }.orderBy(Messages.timestamp)
-                        .map {
-                            Message(
-                                id = it[Messages.id],
-                                fromUserId = it[Messages.fromUserId],
-                                toUserId = it[Messages.toUserId],
-                                fromUsername = it[Messages.fromUsername],
-                                content = it[Messages.content],
-                                timestamp = it[Messages.timestamp].toString(),
-                                type = it[Messages.type],
-                                gameInvitation = if (it[Messages.gameInvitationRoomId] != null) {
-                                    GameInvitation(
-                                        roomId = it[Messages.gameInvitationRoomId]!!,
-                                        hostUsername = it[Messages.gameInvitationHostUsername]!!,
-                                        gameType = it[Messages.gameInvitationGameType]!!,
-                                        difficulty = it[Messages.gameInvitationDifficulty]!!
-                                    )
-                                } else null
-                            )
-                        }
+                    val mongoMessages = mongoService.getMessagesBetweenUsers(userId, friendId)
+                    val messages = mongoMessages.map {
+                        Message(
+                            id = it.id,
+                            fromUserId = it.fromUserId,
+                            toUserId = it.toUserId,
+                            fromUsername = it.fromUsername,
+                            content = it.content,
+                            timestamp = it.timestamp,
+                            type = it.type,
+                            gameInvitation = if (it.gameInvitationRoomId != null) {
+                                GameInvitation(
+                                    roomId = it.gameInvitationRoomId!!,
+                                    hostUsername = it.gameInvitationHostUsername!!,
+                                    gameType = it.gameInvitationGameType!!,
+                                    difficulty = it.gameInvitationDifficulty!!
+                                )
+                            } else null
+                        )
                     }
                     call.respond(messages)
                 } catch (e: Exception) {
@@ -314,20 +290,18 @@ fun Application.configureRouting(authService: AuthService) {
                 val userId = call.parameters["userId"] ?: return@get call.respondText("Missing userId", status = HttpStatusCode.BadRequest)
 
                 try {
-                    val requests = transaction {
-                        FriendRequests.select { FriendRequests.toUserId eq userId }
-                            .map {
-                                FriendRequest(
-                                    id = it[FriendRequests.id],
-                                    fromUserId = it[FriendRequests.fromUserId],
-                                    toUserId = it[FriendRequests.toUserId],
-                                    fromUsername = it[FriendRequests.fromUsername],
-                                    fromEmail = it[FriendRequests.fromEmail],
-                                    fromAvatarId = it[FriendRequests.fromAvatarId],
-                                    status = it[FriendRequests.status],
-                                    createdAt = it[FriendRequests.createdAt].toString()
-                                )
-                            }
+                    val mongoRequests = mongoService.getFriendRequestsForUser(userId)
+                    val requests = mongoRequests.map {
+                        FriendRequest(
+                            id = it.id,
+                            fromUserId = it.fromUserId,
+                            toUserId = it.toUserId,
+                            fromUsername = it.fromUsername,
+                            fromEmail = it.fromEmail,
+                            fromAvatarId = it.fromAvatarId,
+                            status = it.status,
+                            createdAt = it.createdAt
+                        )
                     }
                     call.respond(requests)
                 } catch (e: Exception) {
