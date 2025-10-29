@@ -15,7 +15,7 @@ COPY src src
 RUN ./gradlew build --no-daemon
 
 # Create a smaller runtime image
-FROM openjdk:17-jre-slim
+FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
