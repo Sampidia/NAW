@@ -1,0 +1,57 @@
+# Build artifacts and binaries
+*.apk
+*.aar
+*.jar
+*.war
+*.ear
+*.class
+
+# Android build directories
+app/build/
+app/release/
+build/
+.gradle/
+
+# Gradle wrapper
+gradle-wrapper.jar
+gradle-wrapper.properties
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.swp
+*.bak
+
+# Local configuration
+local.properties
+gradle.properties
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Node modules (if any)
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.production
