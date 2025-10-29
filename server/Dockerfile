@@ -2,14 +2,16 @@ FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-# Copy from parent directory since Dockerfile is in server/ but needs repo root files
-COPY ../gradle gradle
-COPY ../gradlew .
-COPY ../build.gradle.kts .
-COPY ../settings.gradle.kts .
+# Copy Gradle wrapper and build files
+COPY gradle gradle
+COPY gradlew .
+COPY build.gradle.kts .
 
-# Copy source code from parent directory
-COPY ../src src
+# Copy Gradle settings from root
+COPY ../settings.gradle settings.gradle
+
+# Copy source code
+COPY src src
 
 # Build the application
 RUN ./gradlew build --no-daemon
