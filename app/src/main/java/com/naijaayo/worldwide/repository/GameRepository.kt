@@ -48,4 +48,8 @@ object GameRepository {
     suspend fun updateAvatar(userId: String, avatar: Avatar) = withContext(Dispatchers.IO) {
         api.updateAvatar(userId, avatar)
     }
+
+    suspend fun submitGameResult(gameResult: com.naijaayo.worldwide.GameResult) = withContext(Dispatchers.IO) {
+        api.submitGameResult(gameResult)
+    }
 }

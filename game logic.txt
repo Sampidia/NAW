@@ -1,0 +1,105 @@
+Based on my analysis of the codebase, here's a comprehensive explanation of the current game logic for Naija Ayo Worldwide, which implements a digital version of the traditional Nigerian board game Ayo (a variant of Mancala). I'll break it down into key components: game setup, move mechanics, capture system, game end conditions, and additional features.
+
+## Game Setup
+The game is played on a board with 12 pits arranged in a circle (6 pits per player):
+- **Player 1's pits**: Indices 0-5 (bottom row in typical UI)
+- **Player 2's pits**: Indices 6-11 (top row)
+- Each pit starts with 4 seeds
+- Scores are tracked separately and represent captured seeds (not remaining seeds on the board)
+- The game supports different difficulty levels (EASY, MEDIUM, HARD) which affect AI behavior and capture rules in single-player mode
+- Turn time limit is 30 seconds (for multiplayer timeout handling)
+
+## Core Move Mechanics
+When a player makes a move:
+
+1. **Selection Validation**: 
+   - Must be the player's turn
+   - Selected pit must belong to the current player
+   - Pit must not be empty
+   - Game must not be over
+
+2. **Sowing Process**:
+   - All seeds from the selected pit are picked up and distributed
+   - Seeds are sown counterclockwise, one per pit, starting from the **next pit** after the selected one
+   - Sowing wraps around the board and continues until all seeds are distributed
+   - Unlike some Mancala variants, seeds can be dropped back into the starting pit on subsequent laps (no "eternal skipping")
+
+3. **Turn Switching**:
+   - After sowing, the turn automatically switches to the other player
+   - No automatic extra turn for ending in certain pits (simplified from some traditional rules)
+
+## Capture System
+Captures are the key strategic element, implemented through separate game engines for each difficulty level:
+
+1. **Capture Triggers**:
+   - Captures occur when sowing creates specific seed count transitions in opponent pits
+   - Each difficulty level has its own dedicated game engine with hardcoded capture logic
+   - Only pits that received at least one seed from sowing can be captured
+
+2. **Capture Rules by Level**:
+   - **EASY**: Captures pits with 2 or 3 seeds (transitions from 1→2 or 2→3)
+   - **MEDIUM**: Captures pits with exactly 3 seeds (transition from 2→3)
+   - **HARD**: Captures pits with exactly 4 seeds (transition from 3→4)
+
+3. **Implementation Architecture**:
+   - **`EasyGameEngine.kt`**: Handles EASY level capture logic (2-3 seeds)
+   - **`MediumGameEngine.kt`**: Handles MEDIUM level capture logic (3 seeds)
+   - **`HardGameEngine.kt`**: Handles HARD level capture logic (4 seeds)
+   - **`LocalGameEngine.kt`**: Acts as delegator, routing to appropriate level engine
+
+4. **Capture Execution**:
+   - When triggered, all seeds from qualifying opponent pits are captured and added to the player's score
+   - Captured pits are emptied
+   - Captures only happen on the opponent's side
+   - Each level engine ensures sowing validation to prevent false captures
+
+## Game End Conditions
+The game ends when any of these conditions are met:
+
+1. **One side empty**: All pits on one player's side have no seeds
+2. **Low seed count**: Total seeds on the board ≤ 3
+3. **No valid moves**: Current player has no legal moves (though this is automatically handled)
+
+When the game ends:
+- **Remaining seeds are discarded** - they do not count toward the final score
+- **Winner determination**: Player with more captured seeds wins
+- **Tie possible**: If scores are equal, no winner is declared
+- Scores are frozen at the captured seed counts
+
+## Additional Features
+
+### AI System (Single-Player)
+- Currently implements a simple random move selection
+- Uses the same game engine as local multiplayer
+- AI difficulty levels affect capture rules rather than move intelligence
+- TODO in code indicates more sophisticated AI strategies could be added
+
+### Animation Support
+- The engine provides detailed sowing steps for UI animations
+- Each seed drop is tracked individually for smooth visual effects
+- Capture animations can highlight captured pits
+
+### Multiplayer Considerations
+- The game supports both local and networked multiplayer
+- Network synchronization would use the same GameState structure
+- Turn-based with time limits to prevent stalling
+
+## Key Differences from Traditional Ayo
+- **Simplified turn rules**: No automatic extra turn mechanics
+- **Level-based captures**: Traditional Ayo typically has fixed capture rules, but here they vary by difficulty
+- **Seed discard on game end**: Remaining seeds don't transfer to scores
+- **No "feeding" requirement**: Players can end moves on their own side without penalty
+- **Modular engine architecture**: Separate engines per difficulty level for precise control
+
+## Implementation Architecture
+
+The game logic is implemented in a modular way with clear separation of concerns:
+
+- **`GameState`**: Immutable data class representing the complete game state
+- **`LocalGameEngine`**: Main engine that delegates to level-specific implementations
+- **`EasyGameEngine`**: EASY difficulty engine (captures 2-3 seeds)
+- **`MediumGameEngine`**: MEDIUM difficulty engine (captures 3 seeds)
+- **`HardGameEngine`**: HARD difficulty engine (captures 4 seeds)
+- **Common Classes**: `CaptureResult`, `SowingStep`, `MoveResult` for shared functionality
+
+The code emphasizes immutability, provides detailed move validation, and supports animation through granular sowing step tracking for a polished user experience.

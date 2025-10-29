@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.naijaayo.worldwide.app-mergeDebugResources-26:/values-am/values-am.xml",
+            "outputFile": "com.naijaayo.worldwide.app-mergeDebugResources-27:/values-am/values-am.xml",
             "map": [
                 {
                     "source": "C:\\Users\\SAM\\.gradle\\caches\\9.0-milestone-1\\transforms\\1c37868fa60d8dd4eef074f57e44d391\\transformed\\appcompat-1.4.1\\res\\values-am\\values-am.xml",

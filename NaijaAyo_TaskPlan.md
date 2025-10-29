@@ -38,13 +38,13 @@ This document outlines the current project status and the necessary tasks to com
 -   **[x] Update MainActivity.kt for new UI components**
 
 **🎯 Wooden Board Enhancement Tasks:**
--   **[ ] Create wooden board background drawable with carved pits**
--   **[ ] Design individual pit shapes with wood grain texture**
--   **[ ] Implement visual seed system (1-4 seeds per pit)**
--   **[ ] Add small number labels below each pit**
--   **[ ] Update layout for authentic Ayo board appearance**
--   **[ ] Add wood texture and shadows for realism**
--   **[ ] Implement seed animation - subtle animation when seeds are added**
+-   **[x] Create wooden board background drawable with carved pits**
+-   **[x] Design individual pit shapes with wood grain texture**
+-   **[x] Implement visual seed system (1-4 seeds per pit)**
+-   **[x] Add tooltip to dshow number of seeds**
+-   **[x] Update layout for authentic Ayo board appearance**
+-   **[x] Add wood texture and shadows for realism**
+-   **[x] Implement seed animation - subtle animation when seeds are added**
 
 ---
 
@@ -52,11 +52,11 @@ This document outlines the current project status and the necessary tasks to com
 
 This is now our highest priority before adding new features.
 
--   **[ ] Task 7: Fix Single-Player Mode**
+-   **[x] Task 7: Fix Single-Player Mode**
     -   **Goal:** Decouple Single-Player from the networking code.
     -   **Action:** Create a separate, local-only game logic handler or `ViewModel` for single-player games that does not rely on the `GameRepository` or any networking. The "Single Player" button should launch a game that is fully playable offline.
 
--   **[ ] Task 8: Re-enable Multiplayer Lobby Logic**
+-   **[x] Task 8: Re-enable Multiplayer Lobby Logic**
     -   **Goal:** Restore the full functionality of the multiplayer lobby screen.
     -   **Action:** Uncomment the logic that was temporarily disabled in `MultiplayerLobbyActivity.kt` to allow creating and joining rooms.
 

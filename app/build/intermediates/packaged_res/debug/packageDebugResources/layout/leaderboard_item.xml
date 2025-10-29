@@ -3,38 +3,170 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp">
+    android:padding="12dp"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
 
+    <!-- Rank/Position indicator -->
+    <TextView
+        android:id="@+id/rankTextView"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:text="1"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:background="@drawable/circle_rank_background"
+        android:gravity="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Avatar -->
     <ImageView
         android:id="@+id/avatarImageView"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="12dp"
+        app:layout_constraintStart_toEndOf="@+id/rankTextView"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:src="@mipmap/ic_launcher" />
+        android:src="@mipmap/ic_launcher"
+        android:background="@drawable/circle_avatar_background" />
 
-    <TextView
-        android:id="@+id/usernameTextView"
+    <!-- Username and basic info -->
+    <LinearLayout
+        android:id="@+id/userInfoLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="Username"
-        android:textSize="16sp"
+        android:layout_marginStart="12dp"
+        android:orientation="vertical"
         app:layout_constraintStart_toEndOf="@+id/avatarImageView"
-        app:layout_constraintEnd_toStartOf="@+id/ratingTextView"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintEnd_toStartOf="@+id/statsLayout"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <TextView
-        android:id="@+id/ratingTextView"
+        <TextView
+            android:id="@+id/usernameTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Username"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary" />
+
+        <!-- Single Player specific stats -->
+        <LinearLayout
+            android:id="@+id/singlePlayerStats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp">
+
+            <TextView
+                android:id="@+id/gamesPlayedTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Games: 0"
+                android:textSize="11sp"
+                android:textColor="?android:attr/textColorSecondary" />
+
+            <TextView
+                android:id="@+id/winRateTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Win Rate: 0%"
+                android:textSize="11sp"
+                android:textColor="?android:attr/textColorSecondary" />
+
+        </LinearLayout>
+
+        <!-- Multiplayer specific stats -->
+        <LinearLayout
+            android:id="@+id/multiplayerStats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/multiplayerRatingTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MP Rating: 1000"
+                android:textSize="11sp"
+                android:textColor="?android:attr/textColorSecondary" />
+
+            <TextView
+                android:id="@+id/tournamentRankTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Tournament: #1"
+                android:textSize="11sp"
+                android:textColor="?android:attr/textColorSecondary" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Rating and additional stats -->
+    <LinearLayout
+        android:id="@+id/statsLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="1000"
-        android:textSize="16sp"
-        android:textStyle="bold"
+        android:orientation="vertical"
+        android:gravity="end"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <TextView
+            android:id="@+id/ratingTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1000"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/colorPrimary" />
+
+        <TextView
+            android:id="@+id/winsLossesTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0W - 0L"
+            android:textSize="10sp"
+            android:textColor="?android:attr/textColorSecondary"
+            android:layout_gravity="end" />
+
+        <!-- Achievement indicators -->
+        <LinearLayout
+            android:id="@+id/achievementLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp">
+
+            <ImageView
+                android:id="@+id/streakIcon"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:src="@drawable/ic_streak"
+                android:visibility="gone"
+                android:contentDescription="Win Streak" />
+
+            <ImageView
+                android:id="@+id/tournamentIcon"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_marginStart="2dp"
+                android:src="@drawable/ic_tournament"
+                android:visibility="gone"
+                android:contentDescription="Tournament Winner" />
+
+        </LinearLayout>
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

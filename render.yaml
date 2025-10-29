@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: naija-ayo-server
+    runtime: docker
+    dockerfilePath: ./server/Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Set this manually in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true # Render will generate a secure random value
+    healthCheckPath: /
+    disk:
+      name: naija-ayo-data
+      mountPath: /data
+      sizeGB: 10
+
+databases:
+  - name: naija-ayo-db
+    databaseName: naija_ayo
+    user: naija_ayo_user
+    plan: starter

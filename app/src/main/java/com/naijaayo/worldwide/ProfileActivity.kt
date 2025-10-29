@@ -2,6 +2,8 @@ package com.naijaayo.worldwide
 
 import android.os.Bundle
 import android.widget.Button
+import com.naijaayo.worldwide.theme.NigerianThemeManager
+import com.naijaayo.worldwide.auth.SessionManager
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -32,6 +34,20 @@ class ProfileActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Initialize theme manager and apply current theme
+        NigerianThemeManager.initialize(this)
+        NigerianThemeManager.applyThemeToActivity(this)
+
+        // Initialize avatar preference manager
+        com.naijaayo.worldwide.theme.AvatarPreferenceManager.initialize(this)
+
+        // Initialize session manager
+        SessionManager.initialize(this)
+
+        // Hide action bar to show only the logo image
+        supportActionBar?.hide()
+
         setContentView(R.layout.activity_profile)
 
         tabLayout = findViewById(R.id.tabLayout)
@@ -99,12 +115,33 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun setupConfirmButton() {
         confirmButton.setOnClickListener {
+            // Update local preferences
             gameViewModel.updateUserAvatar(selectedAvatarId)
-            Toast.makeText(this, "Avatar saved!", Toast.LENGTH_SHORT).show()
+
+            // Update session if user is logged in
+            SessionManager.updateAvatar(selectedAvatarId)
+
+            // TODO: Sync with server if user is authenticated
+            val currentUser = SessionManager.getCurrentUser()
+            if (currentUser != null) {
+                // TODO: Make API call to update avatar on server
+                // For now, just show success message
+                Toast.makeText(this, "Avatar saved!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Avatar saved locally!", Toast.LENGTH_SHORT).show()
+            }
 
             // Notify MainActivity to refresh avatar if it's running
             // This ensures the game screen updates with the new avatar
             finish()
         }
     }
+
+    override fun onResume() {
+         super.onResume()
+         // Reapply theme when activity becomes visible (e.g., after returning from theme settings)
+         NigerianThemeManager.applyThemeToActivity(this)
+         // Resume background music
+         com.naijaayo.worldwide.sound.BackgroundMusicManager.resumeBackgroundMusic()
+     }
 }

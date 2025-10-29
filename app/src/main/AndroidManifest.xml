@@ -26,11 +26,18 @@
         <activity
             android:name=".MainActivity"
             android:screenOrientation="landscape" />
+        <activity android:name=".LevelSelectionActivity" />
         <activity android:name=".game.GameActivity" />
         <activity android:name=".leaderboard.LeaderboardActivity" />
         <activity android:name=".ProfileActivity" />
         <activity android:name=".friends.FriendsActivity" />
-        <activity android:name="com.naijaayo.worldwide.MultiplayerLobbyActivity" />
+        <activity android:name=".SettingsActivity" />
+        <activity android:name=".SoundSettingsActivity" />
+        <activity android:name=".ThemeSettingsActivity" />
+        <activity android:name=".BoardSettingsActivity" />
+        <activity android:name=".WaitingRoomActivity" />
+        <activity android:name="com.naijaayo.worldwide.MultiplayerLobbyActivity"
+            android:configChanges="orientation|screenSize" />
     </application>
 
 </manifest>

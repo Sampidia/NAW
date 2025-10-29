@@ -28,15 +28,15 @@ class SinglePlayerGameViewModel : ViewModel() {
     val gameMessage: LiveData<String> = _gameMessage
 
     init {
-        startNewGame()
+        // Do not start game in init, let MainActivity call startNewGame with level
     }
 
     /**
-     * Starts a new single-player game
+     * Starts a new single-player game with specified level
      */
-    fun startNewGame() {
-        _gameState.value = gameEngine.createNewGame()
-        _gameMessage.value = "New game started! You're Player 1."
+    fun startNewGame(level: com.naijaayo.worldwide.GameLevel = com.naijaayo.worldwide.GameLevel.MEDIUM) {
+        _gameState.value = gameEngine.createNewGame(level)
+        _gameMessage.value = "Play Now!"
     }
 
     /**
@@ -67,20 +67,24 @@ class SinglePlayerGameViewModel : ViewModel() {
                     if (newState.gameOver) {
                         showGameOverMessage(newState)
                     } else {
-                        _gameMessage.value = "Good move! AI is thinking..."
+                        // Show AI message and let it display briefly
+                        _gameMessage.value = "Nice move, Ai thinking.."
 
-                        // Delay for AI move
-                        delay(1000)
+                        // Delay to let AI message be visible
+                        delay(1500)
 
-                        // Make AI move with timeout protection
+                        // Make AI move with timeout protection (don't change message during AI move)
                         val aiMoveResult = withTimeoutOrNull(5000) { // 5 second timeout
-                            makeAIMoveWithTimeout()
+                            makeAIMoveInternal()
                         }
 
                         if (aiMoveResult == null) {
                             _gameMessage.value = "AI took too long! Your turn."
                             // Reset to player's turn
                             _gameState.value = newState.copy(currentPlayer = 1)
+                        } else {
+                            // AI move completed successfully, show player turn message
+                            _gameMessage.value = "Play Now!"
                         }
                     }
                 } else {
@@ -121,7 +125,7 @@ class SinglePlayerGameViewModel : ViewModel() {
             if (newState.gameOver) {
                 showGameOverMessage(newState)
             } else {
-                _gameMessage.value = "Your turn! Choose a pit."
+                _gameMessage.value = "Play Now!"
             }
         } else {
             _gameMessage.value = "AI couldn't make a move! Your turn."
@@ -133,6 +137,35 @@ class SinglePlayerGameViewModel : ViewModel() {
      */
     private fun makeAIMove() {
         makeAIMoveWithTimeout()
+    }
+
+    /**
+     * Internal AI move function that only updates game state, doesn't change messages
+     */
+    private fun makeAIMoveInternal() {
+        val currentState = _gameState.value ?: return
+
+        // Validate current game state
+        if (currentState.gameOver) {
+            return
+        }
+
+        // Get valid moves for AI
+        val validMoves = gameEngine.getValidMoves(currentState)
+        if (validMoves.isEmpty()) {
+            return
+        }
+
+        val newState = gameEngine.makeAIMove(currentState)
+
+        if (newState != null) {
+            _gameState.value = newState
+
+            if (newState.gameOver) {
+                showGameOverMessage(newState)
+            }
+            // Don't change message here - let the calling function handle it
+        }
     }
 
     /**
@@ -177,6 +210,23 @@ class SinglePlayerGameViewModel : ViewModel() {
             player1Seeds = player1Seeds,
             player2Seeds = player2Seeds
         )
+    }
+
+    /**
+     * Called when a game is completed to update leaderboard
+     */
+    fun onGameCompleted(gameState: GameState) {
+        // For single-player, we can trigger leaderboard refresh here
+        // The actual leaderboard update logic would be in the GameViewModel
+        // For now, we'll just log the completion
+        println("Single-player game completed - Player: ${gameState.player1Score}, AI: ${gameState.player2Score}, Winner: ${gameState.winner}")
+    }
+
+    /**
+     * Updates the game state (for direct state updates from MainActivity)
+     */
+    fun updateGameState(gameState: GameState) {
+        _gameState.value = gameState
     }
 }
 

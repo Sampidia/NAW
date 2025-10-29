@@ -3,6 +3,7 @@ package com.naijaayo.worldwide.network
 import com.naijaayo.worldwide.Avatar
 import com.naijaayo.worldwide.Room
 import com.naijaayo.worldwide.User
+import com.naijaayo.worldwide.GameResult
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -21,5 +22,8 @@ interface ApiService {
 
     @POST("/api/users/{uid}/avatar")
     suspend fun updateAvatar(@Path("uid") userId: String, @Body avatar: Avatar)
+
+    @POST("/api/games/complete")
+    suspend fun submitGameResult(@Body gameResult: GameResult): GameResult
 
 }

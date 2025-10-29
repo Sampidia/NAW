@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.naijaayo.worldwide.app-mergeDebugResources-26:/values/values.xml",
+            "outputFile": "com.naijaayo.worldwide.app-mergeDebugResources-27:/values/values.xml",
             "map": [
                 {
                     "source": "C:\\Users\\SAM\\OneDrive\\Documents\\MY DEV GAMES\\NAIJA AYO WORLDWIDE\\app\\src\\main\\res\\values\\colors.xml",
@@ -18,25 +18,6 @@
                         "startOffsets": "26028,41739,41786,41833,42577,42622,42830",
                         "endColumns": "41,46,46,46,44,44,41",
                         "endOffsets": "26065,41781,41828,41875,42617,42662,42867"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\SAM\\.gradle\\caches\\9.0-milestone-1\\transforms\\ed269156aaab3dff07cba8d704ead820\\transformed\\fragment-1.3.6\\res\\values\\values.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,10",
-                        "startColumns": "4,4,4,4,4",
-                        "startOffsets": "55,112,177,241,411",
-                        "endLines": "2,3,4,9,13",
-                        "endColumns": "56,64,63,24,24",
-                        "endOffsets": "107,172,236,406,555"
-                    },
-                    "to": {
-                        "startLines": "1368,1399,1434,9302,9307",
-                        "startColumns": "4,4,4,4,4",
-                        "startOffsets": "84621,86216,88026,587909,588079",
-                        "endLines": "1368,1399,1434,9306,9310",
-                        "endColumns": "56,64,63,24,24",
-                        "endOffsets": "84673,86276,88085,588074,588223"
                     }
                 },
                 {
@@ -132,6 +113,25 @@
                         "endLines": "379,890,891,892,900,901,902,1372,10003",
                         "endColumns": "55,58,47,55,74,75,71,65,24",
                         "endOffsets": "18847,52575,52623,52679,53365,53441,53513,84860,619118"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\SAM\\.gradle\\caches\\9.0-milestone-1\\transforms\\e18f7f7a66d54f9a3704d5c1e226cb68\\transformed\\fragment-1.4.1\\res\\values\\values.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,10",
+                        "startColumns": "4,4,4,4,4",
+                        "startOffsets": "55,112,177,241,411",
+                        "endLines": "2,3,4,9,13",
+                        "endColumns": "56,64,63,24,24",
+                        "endOffsets": "107,172,236,406,555"
+                    },
+                    "to": {
+                        "startLines": "1368,1399,1434,9302,9307",
+                        "startColumns": "4,4,4,4,4",
+                        "startOffsets": "84621,86216,88026,587909,588079",
+                        "endLines": "1368,1399,1434,9306,9310",
+                        "endColumns": "56,64,63,24,24",
+                        "endOffsets": "84673,86276,88085,588074,588223"
                     }
                 },
                 {

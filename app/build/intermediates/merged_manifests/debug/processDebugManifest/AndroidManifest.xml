@@ -36,11 +36,19 @@
         <activity
             android:name="com.naijaayo.worldwide.MainActivity"
             android:screenOrientation="landscape" />
+        <activity android:name="com.naijaayo.worldwide.LevelSelectionActivity" />
         <activity android:name="com.naijaayo.worldwide.game.GameActivity" />
         <activity android:name="com.naijaayo.worldwide.leaderboard.LeaderboardActivity" />
         <activity android:name="com.naijaayo.worldwide.ProfileActivity" />
         <activity android:name="com.naijaayo.worldwide.friends.FriendsActivity" />
-        <activity android:name="com.naijaayo.worldwide.MultiplayerLobbyActivity" />
+        <activity android:name="com.naijaayo.worldwide.SettingsActivity" />
+        <activity android:name="com.naijaayo.worldwide.SoundSettingsActivity" />
+        <activity android:name="com.naijaayo.worldwide.ThemeSettingsActivity" />
+        <activity android:name="com.naijaayo.worldwide.BoardSettingsActivity" />
+        <activity android:name="com.naijaayo.worldwide.WaitingRoomActivity" />
+        <activity
+            android:name="com.naijaayo.worldwide.MultiplayerLobbyActivity"
+            android:configChanges="orientation|screenSize" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="300">
+
+    <!-- Scale up from small to normal size -->
+    <scale
+        android:fromXScale="0.3"
+        android:toXScale="1.0"
+        android:fromYScale="0.3"
+        android:toYScale="1.0"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:startOffset="0"
+        android:duration="200" />
+
+    <!-- Fade in -->
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0"
+        android:startOffset="0"
+        android:duration="150" />
+
+    <!-- Subtle bounce effect -->
+    <scale
+        android:fromXScale="1.0"
+        android:toXScale="1.1"
+        android:fromYScale="1.0"
+        android:toYScale="1.1"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:startOffset="200"
+        android:duration="100"
+        android:repeatCount="1"
+        android:repeatMode="reverse" />
+
+</set>

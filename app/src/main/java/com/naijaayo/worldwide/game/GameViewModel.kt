@@ -9,6 +9,7 @@ import com.naijaayo.worldwide.Room
 import com.naijaayo.worldwide.User
 import com.naijaayo.worldwide.Avatar
 import com.naijaayo.worldwide.GameState
+import com.naijaayo.worldwide.GameResult
 import com.naijaayo.worldwide.repository.GameRepository
 import com.naijaayo.worldwide.util.SingleLiveEvent
 import kotlinx.coroutines.launch
@@ -34,6 +35,8 @@ class GameViewModel : ViewModel() {
     val navigateToGame: LiveData<Void> = _navigateToGame
 
     private var currentRoom: Room? = null
+
+    fun getCurrentRoom(): Room? = currentRoom
     private val currentUserId = "user1"
 
     init {
@@ -79,7 +82,11 @@ class GameViewModel : ViewModel() {
     fun updateUserAvatar(avatarId: String) {
         viewModelScope.launch {
             try {
-                repository.updateAvatar(currentUserId, Avatar(avatarId))
+                // Save avatar preference locally instead of server call
+                com.naijaayo.worldwide.theme.AvatarPreferenceManager.setUserAvatar(avatarId)
+
+                // Immediately update the LiveData to trigger UI updates
+                _currentUserAvatar.value = avatarId
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -96,12 +103,65 @@ class GameViewModel : ViewModel() {
         }
     }
 
+    fun onGameCompleted(gameState: GameState, isSinglePlayer: Boolean) {
+        viewModelScope.launch {
+            try {
+                // Update user statistics based on game result
+                updateUserStats(gameState, isSinglePlayer)
+
+                // Refresh leaderboard data after stats update
+                fetchLeaderboard()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun updateUserStats(gameState: GameState, isSinglePlayer: Boolean) {
+        viewModelScope.launch {
+            try {
+                // Determine game outcome
+                val playerWon = gameState.winner == 1
+                val playerLost = gameState.winner == 2
+                val isDraw = gameState.winner == 0 || gameState.winner == -1
+
+                // Create game result for server submission
+                val gameResult = com.naijaayo.worldwide.GameResult(
+                    player1Id = currentUserId,
+                    player2Id = if (isSinglePlayer) null else "opponent_id", // TODO: Get actual opponent ID
+                    player1Score = gameState.player1Score,
+                    player2Score = gameState.player2Score,
+                    winner = gameState.winner ?: 0, // Default to draw if null
+                    isSinglePlayer = isSinglePlayer,
+                    gameMode = if (isSinglePlayer) "single" else "multiplayer",
+                    completedAt = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).format(java.util.Date())
+                )
+
+                try {
+                    // Submit game result to server for statistics tracking
+                    repository.submitGameResult(gameResult)
+                    println("Game result submitted successfully")
+                } catch (e: Exception) {
+                    println("Failed to submit game result: ${e.message}")
+                    // Continue with leaderboard refresh even if submission fails
+                }
+
+                // Refresh leaderboard data after game completion
+                fetchLeaderboard()
+
+            } catch (e: Exception) {
+                println("Error updating user stats: ${e.message}")
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun getCurrentUserAvatar() {
         viewModelScope.launch {
             try {
-                // For now, use a default avatar since we don't have a getCurrentUser method
-                // In a real implementation, this would fetch from the repository/server
-                _currentUserAvatar.value = "ayo" // Default avatar
+                // Load avatar preference from local storage
+                val savedAvatar = com.naijaayo.worldwide.theme.AvatarPreferenceManager.getUserAvatar()
+                _currentUserAvatar.value = savedAvatar
             } catch (e: Exception) {
                 _currentUserAvatar.value = "ayo" // Default fallback
             }

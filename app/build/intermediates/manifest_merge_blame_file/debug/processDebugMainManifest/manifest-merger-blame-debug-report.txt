@@ -13,7 +13,7 @@
 11-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:5:22-64
 12
 13    <application
-13-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:7:5-34:19
+13-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:7:5-41:19
 14        android:allowBackup="true"
 14-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:8:9-35
 15        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
@@ -60,43 +60,64 @@
 37-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:27:13-41
 38            android:screenOrientation="landscape" />
 38-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:28:13-50
-39        <activity android:name="com.naijaayo.worldwide.game.GameActivity" />
-39-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:29:9-55
-39-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:29:19-52
-40        <activity android:name="com.naijaayo.worldwide.leaderboard.LeaderboardActivity" />
-40-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:30:9-69
-40-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:30:19-66
-41        <activity android:name="com.naijaayo.worldwide.ProfileActivity" />
-41-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:31:9-53
-41-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:31:19-50
-42        <activity android:name="com.naijaayo.worldwide.friends.FriendsActivity" />
-42-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:32:9-61
-42-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:32:19-58
-43        <activity android:name="com.naijaayo.worldwide.MultiplayerLobbyActivity" />
-43-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:33:9-84
-43-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:33:19-81
-44
-45        <provider
-45-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:26:9-34:20
-46            android:name="androidx.startup.InitializationProvider"
-46-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:27:13-67
-47            android:authorities="com.naijaayo.worldwide.androidx-startup"
-47-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:28:13-68
-48            android:exported="false" >
-48-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:29:13-37
-49            <meta-data
-49-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:31:13-33:52
-50                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-50-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:32:17-75
-51                android:value="androidx.startup" />
-51-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:33:17-49
-52            <meta-data
-52-->[androidx.lifecycle:lifecycle-process:2.4.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\60a47ba136299deb182918e8fa959d09\transformed\jetified-lifecycle-process-2.4.0\AndroidManifest.xml:31:13-33:52
-53                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-53-->[androidx.lifecycle:lifecycle-process:2.4.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\60a47ba136299deb182918e8fa959d09\transformed\jetified-lifecycle-process-2.4.0\AndroidManifest.xml:32:17-78
-54                android:value="androidx.startup" />
-54-->[androidx.lifecycle:lifecycle-process:2.4.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\60a47ba136299deb182918e8fa959d09\transformed\jetified-lifecycle-process-2.4.0\AndroidManifest.xml:33:17-49
-55        </provider>
-56    </application>
-57
-58</manifest>
+39        <activity android:name="com.naijaayo.worldwide.LevelSelectionActivity" />
+39-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:29:9-60
+39-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:29:19-57
+40        <activity android:name="com.naijaayo.worldwide.game.GameActivity" />
+40-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:30:9-55
+40-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:30:19-52
+41        <activity android:name="com.naijaayo.worldwide.leaderboard.LeaderboardActivity" />
+41-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:31:9-69
+41-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:31:19-66
+42        <activity android:name="com.naijaayo.worldwide.ProfileActivity" />
+42-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:32:9-53
+42-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:32:19-50
+43        <activity android:name="com.naijaayo.worldwide.friends.FriendsActivity" />
+43-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:33:9-61
+43-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:33:19-58
+44        <activity android:name="com.naijaayo.worldwide.SettingsActivity" />
+44-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:34:9-54
+44-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:34:19-51
+45        <activity android:name="com.naijaayo.worldwide.SoundSettingsActivity" />
+45-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:35:9-59
+45-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:35:19-56
+46        <activity android:name="com.naijaayo.worldwide.ThemeSettingsActivity" />
+46-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:36:9-59
+46-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:36:19-56
+47        <activity android:name="com.naijaayo.worldwide.BoardSettingsActivity" />
+47-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:37:9-59
+47-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:37:19-56
+48        <activity android:name="com.naijaayo.worldwide.WaitingRoomActivity" />
+48-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:38:9-57
+48-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:38:19-54
+49        <activity
+49-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:39:9-40:62
+50            android:name="com.naijaayo.worldwide.MultiplayerLobbyActivity"
+50-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:39:19-81
+51            android:configChanges="orientation|screenSize" />
+51-->C:\Users\SAM\OneDrive\Documents\MY DEV GAMES\NAIJA AYO WORLDWIDE\app\src\main\AndroidManifest.xml:40:13-59
+52
+53        <provider
+53-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:26:9-34:20
+54            android:name="androidx.startup.InitializationProvider"
+54-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:27:13-67
+55            android:authorities="com.naijaayo.worldwide.androidx-startup"
+55-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:28:13-68
+56            android:exported="false" >
+56-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:29:13-37
+57            <meta-data
+57-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:31:13-33:52
+58                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+58-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:32:17-75
+59                android:value="androidx.startup" />
+59-->[androidx.emoji2:emoji2:1.0.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\9b55f8144f48ce24bcd8d154b6829bee\transformed\jetified-emoji2-1.0.0\AndroidManifest.xml:33:17-49
+60            <meta-data
+60-->[androidx.lifecycle:lifecycle-process:2.4.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\60a47ba136299deb182918e8fa959d09\transformed\jetified-lifecycle-process-2.4.0\AndroidManifest.xml:31:13-33:52
+61                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+61-->[androidx.lifecycle:lifecycle-process:2.4.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\60a47ba136299deb182918e8fa959d09\transformed\jetified-lifecycle-process-2.4.0\AndroidManifest.xml:32:17-78
+62                android:value="androidx.startup" />
+62-->[androidx.lifecycle:lifecycle-process:2.4.0] C:\Users\SAM\.gradle\caches\9.0-milestone-1\transforms\60a47ba136299deb182918e8fa959d09\transformed\jetified-lifecycle-process-2.4.0\AndroidManifest.xml:33:17-49
+63        </provider>
+64    </application>
+65
+66</manifest>

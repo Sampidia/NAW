@@ -1,17 +1,31 @@
 package com.naijaayo.worldwide
 
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.io.Serializable
 
 data class User(
-    val uid: String,
+    val id: String,
     val username: String,
     val email: String,
-    val avatarId: String? = null,
-    val rating: Int = 1000,
-    val wins: Int = 0,
-    val losses: Int = 0,
-    val createdAt: String = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(Date()),
-    val fcmToken: String? = null
-)
+    val avatarId: String = "ayo", // Default avatar
+    val createdAt: String,
+    val lastLoginAt: String? = null,
+    val isOnline: Boolean = false
+) : Serializable
+
+data class AuthRequest(
+    val username: String,
+    val email: String,
+    val password: String
+) : Serializable
+
+data class AuthResponse(
+    val success: Boolean,
+    val user: User? = null,
+    val token: String? = null,
+    val message: String? = null
+) : Serializable
+
+data class LoginRequest(
+    val email: String,
+    val password: String
+) : Serializable

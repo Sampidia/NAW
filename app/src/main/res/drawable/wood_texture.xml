@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base wood color -->
+    <shape android:shape="rectangle">
+        <solid android:color="#8B4513" />
+    </shape>
+
+    <!-- Wood grain pattern 1 -->
+    <shape android:shape="rectangle">
+        <gradient
+            android:type="linear"
+            android:startColor="#A0522D"
+            android:endColor="#654321"
+            android:angle="45" />
+    </shape>
+
+    <!-- Wood grain pattern 2 (cross grain) -->
+    <shape android:shape="rectangle">
+        <gradient
+            android:type="linear"
+            android:startColor="#CD853F"
+            android:endColor="#8B4513"
+            android:angle="135" />
+    </shape>
+
+    <!-- Wood knots (random darker spots) -->
+    <shape android:shape="oval">
+        <gradient
+            android:type="radial"
+            android:gradientRadius="20%"
+            android:startColor="#654321"
+            android:endColor="#00000000"
+            android:centerX="0.2"
+            android:centerY="0.2" />
+        <size
+            android:width="12dp"
+            android:height="12dp" />
+    </shape>
+
+    <!-- Subtle noise texture -->
+    <shape android:shape="rectangle">
+        <gradient
+            android:type="radial"
+            android:gradientRadius="100%"
+            android:startColor="#05000000"
+            android:endColor="#00000000"
+            android:centerX="0.5"
+            android:centerY="0.5" />
+    </shape>
+</layer-list>

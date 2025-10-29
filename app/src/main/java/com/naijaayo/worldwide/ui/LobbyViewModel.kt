@@ -24,4 +24,10 @@ class LobbyViewModel : ViewModel() {
             }
         }
     }
+
+    fun addRoom(room: Room) {
+        val currentRooms = _rooms.value?.toMutableList() ?: mutableListOf()
+        currentRooms.add(room)
+        _rooms.value = currentRooms
+    }
 }

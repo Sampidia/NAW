@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.naijaayo.worldwide.app-mergeDebugResources-26:/values-eu/values-eu.xml",
+            "outputFile": "com.naijaayo.worldwide.app-mergeDebugResources-27:/values-eu/values-eu.xml",
             "map": [
                 {
                     "source": "C:\\Users\\SAM\\.gradle\\caches\\9.0-milestone-1\\transforms\\40b9ebaa048e3e52586fa400ac8e9487\\transformed\\core-1.7.0\\res\\values-eu\\values-eu.xml",

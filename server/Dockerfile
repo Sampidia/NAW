@@ -1,5 +1,33 @@
-FROM openjdk:11-jre-slim
+FROM openjdk:17-jdk-slim
 
-COPY build/libs/server-all.jar /app/
+WORKDIR /app
 
-CMD ["java", "-jar", "/app/server-all.jar"]
+# Copy Gradle wrapper and build files
+COPY gradle gradle
+COPY gradlew .
+COPY build.gradle.kts .
+COPY settings.gradle.kts .
+
+# Copy source code
+COPY src src
+
+# Build the application
+RUN ./gradlew build --no-daemon
+
+# Create a smaller runtime image
+FROM openjdk:17-jre-slim
+
+WORKDIR /app
+
+# Copy the built JAR
+COPY --from=0 /app/build/libs/naija-ayo-server-0.0.1-all.jar app.jar
+
+# Expose port
+EXPOSE 8080
+
+# Set environment variables
+ENV DATABASE_URL=""
+ENV JWT_SECRET=""
+
+# Run the application
+CMD ["java", "-jar", "app.jar"]

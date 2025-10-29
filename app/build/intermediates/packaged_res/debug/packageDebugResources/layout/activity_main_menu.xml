@@ -6,12 +6,27 @@
     android:layout_height="match_parent"
     tools:context=".MainMenuActivity">
 
+    <ImageView
+        android:id="@+id/appLogo"
+        android:layout_width="wrap_content"
+        android:layout_height="80dp"
+        android:src="@drawable/logo"
+        android:contentDescription="Naija Ayo Worldwide Logo"
+        android:padding="16dp"
+        android:adjustViewBounds="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <Button
         android:id="@+id/singlePlayerButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Single Player"
-        app:layout_constraintTop_toTopOf="parent"
+        android:textSize="14sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_purple_hover_animated"
+        app:layout_constraintTop_toBottomOf="@+id/appLogo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/multiplayerButton" />
@@ -21,16 +36,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Multiplayer"
+        android:textSize="14sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_purple_hover_animated"
         app:layout_constraintTop_toBottomOf="@+id/singlePlayerButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/profileButton" />
+        app:layout_constraintBottom_toTopOf="@+id/settingsButton" />
 
     <Button
-        android:id="@+id/profileButton"
+        android:id="@+id/settingsButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Profile"
+        android:text="Settings"
+        android:textSize="14sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_purple_hover_animated"
         app:layout_constraintTop_toBottomOf="@+id/multiplayerButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -41,7 +62,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Leaderboard"
-        app:layout_constraintTop_toBottomOf="@+id/profileButton"
+        android:textSize="14sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_purple_hover_animated"
+        app:layout_constraintTop_toBottomOf="@+id/settingsButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/friendsButton" />
@@ -51,6 +75,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Friends"
+        android:textSize="14sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_purple_hover_animated"
         app:layout_constraintTop_toBottomOf="@+id/leaderboardButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
