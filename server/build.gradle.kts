@@ -15,6 +15,9 @@ repositories {
 }
 
 dependencies {
+    // Common module dependency
+    implementation(project(":common"))
+
     implementation("io.ktor:ktor-server-core-jvm:2.3.7")
     implementation("io.ktor:ktor-server-netty-jvm:2.3.7")
     implementation("io.ktor:ktor-server-websockets-jvm:2.3.7")
