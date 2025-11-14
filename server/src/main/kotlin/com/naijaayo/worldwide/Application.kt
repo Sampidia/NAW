@@ -4,18 +4,15 @@ import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.channels.ConsumeAsFlow
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.serialization.json.Json
 import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.http.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
-import java.time.LocalDateTime
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -56,10 +53,10 @@ fun Application.module() {
     // Configure WebSockets
     install(WebSockets)
 
-    configureRouting(authService)
+    configureRouting(authService, mongoService)
 }
 
-fun Application.configureRouting(authService: MongoAuthService) {
+fun Application.configureRouting(authService: MongoAuthService, mongoService: MongoService) {
     val rooms = ConcurrentHashMap<String, Room>()
     val gameStates = ConcurrentHashMap<String, GameState>()
     val userSessions = ConcurrentHashMap<String, DefaultWebSocketSession>()

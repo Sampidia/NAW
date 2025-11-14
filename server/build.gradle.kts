@@ -1,7 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm")
     application
     id("com.github.johnrengelman.shadow")
 }
@@ -44,7 +43,7 @@ dependencies {
 
     // Testing
     testImplementation("io.ktor:ktor-server-tests-jvm:2.3.7")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.9.21")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
 
 kotlin {
