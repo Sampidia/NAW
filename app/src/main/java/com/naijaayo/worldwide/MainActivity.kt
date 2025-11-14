@@ -1222,7 +1222,6 @@ class MainActivity : AppCompatActivity() {
         // Start the complete animation sequence
         animationRunnable.run()
     }
-}
 
     private fun applyRoomSettings(settings: RoomSettings) {
         // Get valid themes from NigerianThemeManager
@@ -1237,8 +1236,16 @@ class MainActivity : AppCompatActivity() {
         BoardManager.setActiveBoard(settings.boardId)
 
         // Apply background music using existing SoundPreferencesManager system
-        com.naijaayo.worldwide.sound.SoundPreferencesManager.setSelectedMusicTrack(settings.musicId)
-        com.naijaayo.worldwide.sound.BackgroundMusicManager.switchTrack(settings.musicId)
+        // Note: Theme and Music are separate settings. Music is applied directly via musicId
+        if (settings.musicId.isNotEmpty()) {
+            com.naijaayo.worldwide.sound.SoundPreferencesManager.setSelectedMusicTrack(settings.musicId)
+            // Find the MusicTrack by ID before switching
+            val musicTracks = com.naijaayo.worldwide.sound.BackgroundMusicManager.getAllMusicTracks()
+            val selectedTrack = musicTracks.find { it.id == settings.musicId }
+            if (selectedTrack != null) {
+                com.naijaayo.worldwide.sound.BackgroundMusicManager.switchTrack(selectedTrack)
+            }
+        }
 
         // Apply sound settings using existing SoundPreferencesManager system
         com.naijaayo.worldwide.sound.SoundPreferencesManager.setSoundEnabled(settings.soundEnabled)
@@ -1247,10 +1254,7 @@ class MainActivity : AppCompatActivity() {
         // Reload board background to apply new settings
         loadSelectedBoardBackground()
     }
-/**
- * Data class representing a sowing step for animation
- */
-data class SowingStep(
+
     private fun submitGameResult(gameState: GameState, isSinglePlayer: Boolean) {
         // Only submit if user is authenticated
         if (!com.naijaayo.worldwide.auth.SessionManager.isLoggedIn()) {
@@ -1264,9 +1268,7 @@ data class SowingStep(
         // This will be implemented when the network layer is set up
         println("Game result ready for submission: Player ${currentUser.username} - Winner: ${gameState.winner}")
     }
-    val pitIndex: Int,
-    val pitValueAfterSowing: Int,
-    val isFinalStep: Boolean = false
+
     private fun saveCurrentGame() {
         // Check if user is authenticated
         if (!com.naijaayo.worldwide.auth.SessionManager.isLoggedIn()) {
@@ -1339,4 +1341,12 @@ data class SowingStep(
         resumeDialog.show()
     }
 }
+
+/**
+ * Data class representing a sowing step for animation
+ */
+data class SowingStep(
+    val pitIndex: Int,
+    val pitValueAfterSowing: Int,
+    val isFinalStep: Boolean = false
 )

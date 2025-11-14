@@ -40,7 +40,10 @@ class MessageAdapter(
         if (message.type == MessageType.GAME_INVITATION && message.gameInvitation != null) {
             holder.joinGameButton.visibility = View.VISIBLE
             holder.joinGameButton.setOnClickListener {
-                onJoinGameClick(message.gameInvitation)
+                val gameInvitation = message.gameInvitation
+                if (gameInvitation != null) {
+                    onJoinGameClick(gameInvitation)
+                }
             }
         } else {
             holder.joinGameButton.visibility = View.GONE

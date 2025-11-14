@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.naijaayo.worldwide.app-mergeDebugResources-27:/values-h720dp-v13/values-h720dp-v13.xml",
+            "outputFile": "com.naijaayo.worldwide.app-mergeDebugResources-38:/values-h720dp-v13/values-h720dp-v13.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\SAM\\.gradle\\caches\\9.0-milestone-1\\transforms\\1c37868fa60d8dd4eef074f57e44d391\\transformed\\appcompat-1.4.1\\res\\values-h720dp-v13\\values-h720dp-v13.xml",
+                    "source": "C:\\Users\\SAM\\.gradle\\caches\\8.9\\transforms\\60ccf7ba1a56a353af792f2c1a98e115\\transformed\\appcompat-1.4.1\\res\\values-h720dp-v13\\values-h720dp-v13.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

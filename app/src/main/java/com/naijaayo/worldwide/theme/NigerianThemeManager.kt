@@ -80,6 +80,10 @@ object NigerianThemeManager {
         return themes!!
     }
 
+    fun getAvailableThemes(): List<NigerianTheme> {
+        return getAllThemes().filter { it.isAvailable }
+    }
+
     fun getActiveTheme(): NigerianTheme? {
         val activeThemeId = sharedPreferences.getString(KEY_ACTIVE_THEME, "lagos")
         return getAllThemes().find { it.id == activeThemeId } ?: getAllThemes().find { it.isActive }

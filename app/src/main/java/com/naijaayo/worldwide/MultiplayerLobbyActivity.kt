@@ -98,7 +98,8 @@ class MultiplayerLobbyActivity : AppCompatActivity() {
             val currentUser = SessionManager.getCurrentUser()
             if (currentUser == null) {
                 showAuthDialog()
-                return
+                dialog.dismiss()
+                return@setOnClickListener
             }
             val currentUserId = currentUser.id
             val currentUsername = currentUser.username
@@ -136,6 +137,12 @@ class MultiplayerLobbyActivity : AppCompatActivity() {
                     putExtra("hostUsername", currentRoom.hostUsername)
                     putExtra("difficulty", currentRoom.difficulty.name)
                     putExtra("isHost", true) // Creator is host
+                }
+                startActivity(intent)
+            }
+        })
+    }
+
     private fun showAuthDialog() {
         val authDialog = AuthDialog(this) { userId, username, avatarId ->
             // Authentication successful, proceed with normal initialization
@@ -171,7 +178,6 @@ class MultiplayerLobbyActivity : AppCompatActivity() {
         }
     }
 
-    // This method is now in initializeLobby()
     override fun onResume() {
          super.onResume()
          // Reapply theme when activity becomes visible (e.g., after returning from theme settings)
@@ -179,26 +185,9 @@ class MultiplayerLobbyActivity : AppCompatActivity() {
          // Resume background music
          com.naijaayo.worldwide.sound.BackgroundMusicManager.resumeBackgroundMusic()
 
-         // Only refresh rooms if lobby is initialized (user is logged in)
-         if (this::lobbyViewModel.isInitialized) {
+         // Only refresh rooms if user is logged in
+         if (SessionManager.isLoggedIn()) {
              lobbyViewModel.fetchRooms()
          }
-     }
-}
-                }
-                startActivity(intent)
-            }
-        })
-    }
-
-    override fun onResume() {
-         super.onResume()
-         // Reapply theme when activity becomes visible (e.g., after returning from theme settings)
-         NigerianThemeManager.applyThemeToActivity(this)
-         // Resume background music
-         com.naijaayo.worldwide.sound.BackgroundMusicManager.resumeBackgroundMusic()
-
-         // Refresh rooms list when returning to lobby
-         lobbyViewModel.fetchRooms()
      }
 }

@@ -10,7 +10,10 @@ import com.naijaayo.worldwide.AuthRequest
 import com.naijaayo.worldwide.AuthResponse
 import com.naijaayo.worldwide.LoginRequest
 import com.naijaayo.worldwide.R
-import com.naijaayo.worldwide.databinding.DialogAuthBinding
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+// import com.naijaayo.worldwide.databinding.DialogAuthBinding
 import kotlinx.coroutines.launch
 
 class AuthDialog(
@@ -18,7 +21,7 @@ class AuthDialog(
     private val onAuthSuccess: (String, String, String) -> Unit // userId, username, avatarId
 ) : Dialog(context) {
 
-    private lateinit var binding: DialogAuthBinding
+    // private lateinit var binding: DialogAuthBinding
     private var isSignUpMode = true
 
     init {
@@ -26,8 +29,10 @@ class AuthDialog(
     }
 
     private fun setupDialog() {
-        binding = DialogAuthBinding.inflate(LayoutInflater.from(context))
-        setContentView(binding.root)
+        // binding = DialogAuthBinding.inflate(LayoutInflater.from(context))
+        // setContentView(binding.root)
+        val view = LayoutInflater.from(context).inflate(R.layout.dialog_auth, null)
+        setContentView(view)
 
         window?.setBackgroundDrawableResource(android.R.color.transparent)
         window?.setLayout(
@@ -40,10 +45,11 @@ class AuthDialog(
     }
 
     private fun setupTabs() {
-        binding.authTabLayout.addTab(binding.authTabLayout.newTab().setText("Sign Up"))
-        binding.authTabLayout.addTab(binding.authTabLayout.newTab().setText("Sign In"))
+        val authTabLayout = findViewById<TabLayout>(R.id.authTabLayout)
+        authTabLayout.addTab(authTabLayout.newTab().setText("Sign Up"))
+        authTabLayout.addTab(authTabLayout.newTab().setText("Sign In"))
 
-        binding.authTabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+        authTabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 isSignUpMode = tab?.position == 0
                 updateUI()
@@ -55,22 +61,31 @@ class AuthDialog(
     }
 
     private fun updateUI() {
+        val signUpLayout = findViewById<android.widget.LinearLayout>(R.id.signUpLayout)
+        val signInLayout = findViewById<android.widget.LinearLayout>(R.id.signInLayout)
+        val authActionButton = findViewById<Button>(R.id.authActionButton)
+        val dialogTitle = findViewById<TextView>(R.id.dialogTitle)
+        val errorTextView = findViewById<TextView>(R.id.errorTextView)
+
         if (isSignUpMode) {
-            binding.signUpLayout.visibility = android.view.View.VISIBLE
-            binding.signInLayout.visibility = android.view.View.GONE
-            binding.authActionButton.text = "Sign Up"
-            binding.dialogTitle.text = "Sign Up for Multiplayer"
+            signUpLayout.visibility = android.view.View.VISIBLE
+            signInLayout.visibility = android.view.View.GONE
+            authActionButton.text = "Sign Up"
+            dialogTitle.text = "Sign Up for Multiplayer"
         } else {
-            binding.signUpLayout.visibility = android.view.View.GONE
-            binding.signInLayout.visibility = android.view.View.VISIBLE
-            binding.authActionButton.text = "Sign In"
-            binding.dialogTitle.text = "Sign In to Multiplayer"
+            signUpLayout.visibility = android.view.View.GONE
+            signInLayout.visibility = android.view.View.VISIBLE
+            authActionButton.text = "Sign In"
+            dialogTitle.text = "Sign In to Multiplayer"
         }
-        binding.errorTextView.visibility = android.view.View.GONE
+        errorTextView.visibility = android.view.View.GONE
     }
 
     private fun setupButtons() {
-        binding.authActionButton.setOnClickListener {
+        val authActionButton = findViewById<Button>(R.id.authActionButton)
+        val cancelButton = findViewById<Button>(R.id.cancelButton)
+
+        authActionButton.setOnClickListener {
             if (isSignUpMode) {
                 performSignUp()
             } else {
@@ -78,16 +93,16 @@ class AuthDialog(
             }
         }
 
-        binding.cancelButton.setOnClickListener {
+        cancelButton.setOnClickListener {
             dismiss()
         }
     }
 
     private fun performSignUp() {
-        val username = binding.usernameEditText.text.toString().trim()
-        val email = binding.emailEditText.text.toString().trim()
-        val password = binding.passwordEditText.text.toString()
-        val confirmPassword = binding.confirmPasswordEditText.text.toString()
+        val username = findViewById<EditText>(R.id.usernameEditText).text.toString().trim()
+        val email = findViewById<EditText>(R.id.emailEditText).text.toString().trim()
+        val password = findViewById<EditText>(R.id.passwordEditText).text.toString()
+        val confirmPassword = findViewById<EditText>(R.id.confirmPasswordEditText).text.toString()
 
         // Validation
         when {
@@ -105,8 +120,8 @@ class AuthDialog(
     }
 
     private fun performSignIn() {
-        val email = binding.signInEmailEditText.text.toString().trim()
-        val password = binding.signInPasswordEditText.text.toString()
+        val email = findViewById<EditText>(R.id.signInEmailEditText).text.toString().trim()
+        val password = findViewById<EditText>(R.id.signInPasswordEditText).text.toString()
 
         // Validation
         when {
@@ -164,7 +179,8 @@ class AuthDialog(
     }
 
     private fun showError(message: String) {
-        binding.errorTextView.text = message
-        binding.errorTextView.visibility = android.view.View.VISIBLE
+        val errorTextView = findViewById<TextView>(R.id.errorTextView)
+        errorTextView.text = message
+        errorTextView.visibility = android.view.View.VISIBLE
     }
 }

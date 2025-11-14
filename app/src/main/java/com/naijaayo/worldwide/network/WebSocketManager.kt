@@ -54,14 +54,16 @@ class WebSocketManager {
 
     private suspend fun listenForMessages() {
         try {
-            session?.incoming?.consumeEach { frame ->
-                if (frame is Frame.Text) {
-                    try {
-                        val message = Json.decodeFromString<com.naijaayo.worldwide.Message>(frame.readText())
-                        _messageFlow.emit(message)
-                    } catch (e: Exception) {
-                        // Handle parsing error
-                        e.printStackTrace()
+            session?.incoming?.let { incoming ->
+                for (frame in incoming) {
+                    if (frame is Frame.Text) {
+                        try {
+                            val message = Json.decodeFromString<com.naijaayo.worldwide.Message>(frame.readText())
+                            _messageFlow.emit(message)
+                        } catch (e: Exception) {
+                            // Handle parsing error
+                            e.printStackTrace()
+                        }
                     }
                 }
             }
@@ -78,11 +80,7 @@ class WebSocketManager {
         }
     }
 
-    suspend fun awaitConnection(): Boolean {
-        return connectionChannel.receive()
-    }
+    suspend fun awaitConnection(): Boolean = connectionChannel.receive()
 
-    fun isConnected(): Boolean {
-        return session != null
-    }
+    fun isConnected(): Boolean = session != null
 }

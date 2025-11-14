@@ -9,7 +9,7 @@ class AuthInterceptor : Interceptor {
         val originalRequest = chain.request()
 
         // Get auth token from session manager
-        val token = SessionManager.getInstance().getAuthToken()
+        val token = SessionManager.getAuthToken()
 
         // Add Authorization header if token exists
         val newRequest = if (token != null) {
