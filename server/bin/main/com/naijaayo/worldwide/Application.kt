@@ -223,7 +223,8 @@ fun Application.configureRouting(authService: MongoAuthService, mongoService: Mo
                             id = it.id,
                             username = it.username,
                             email = it.email,
-                            avatarId = it.avatarId
+                            avatarId = it.avatarId,
+                            createdAt = it.createdAt.toString()
                         )
                     }
                     call.respond(results)
@@ -249,8 +250,7 @@ fun Application.configureRouting(authService: MongoAuthService, mongoService: Mo
                         gameInvitationRoomId = message.gameInvitation?.roomId,
                         gameInvitationHostUsername = message.gameInvitation?.hostUsername,
                         gameInvitationGameType = message.gameInvitation?.gameType,
-                        gameInvitationDifficulty = message.gameInvitation?.difficulty,
-                        createdAt = System.currentTimeMillis()
+                        gameInvitationDifficulty = message.gameInvitation?.difficulty
                     )
                     mongoService.saveMessage(mongoMessage)
 
