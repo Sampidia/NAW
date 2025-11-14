@@ -96,7 +96,7 @@ class MongoService {
     suspend fun updateFriendRequestStatus(id: String, status: FriendRequestStatus): Boolean {
         val result = friendRequests.updateOne(
             Filters.eq("_id", id),
-            Updates.set("status", status)
+            listOf(Updates.set("status", status))
         )
         return result.modifiedCount > 0
     }
