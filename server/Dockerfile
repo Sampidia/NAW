@@ -1,5 +1,5 @@
 # Build stage
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY common/src common/src/
 RUN ./gradlew :server:shadowJar --no-daemon
 
 # Runtime stage
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
