@@ -249,7 +249,8 @@ fun Application.configureRouting(authService: MongoAuthService, mongoService: Mo
                         gameInvitationRoomId = message.gameInvitation?.roomId,
                         gameInvitationHostUsername = message.gameInvitation?.hostUsername,
                         gameInvitationGameType = message.gameInvitation?.gameType,
-                        gameInvitationDifficulty = message.gameInvitation?.difficulty
+                        gameInvitationDifficulty = message.gameInvitation?.difficulty,
+                        createdAt = System.currentTimeMillis()
                     )
                     mongoService.saveMessage(mongoMessage)
 
