@@ -128,28 +128,28 @@ class MongoAuthService(private val mongoService: MongoService) {
     fun getCurrentUser(call: io.ktor.server.application.ApplicationCall): AuthUser? {
         return try {
             val principal = call.principal<JWTPrincipal>()
-            principal?.let {
-                val id = it.getClaim("userId")?.asString() ?: return null
-                val username = it.getClaim("username")?.asString() ?: return null
-                val email = it.getClaim("email")?.asString() ?: return null
-                val avatarId = it.getClaim("avatarId")?.asString() ?: return null
+            if (principal == null) return null
 
-                AuthUser(id, username, email, avatarId)
-            }
+            val id = principal.getClaim("userId")?.asString() ?: return null
+            val username = principal.getClaim("username")?.asString() ?: return null
+            val email = principal.getClaim("email")?.asString() ?: return null
+            val avatarId = principal.getClaim("avatarId")?.asString() ?: return null
+
+            AuthUser(id, username, email, avatarId)
         } catch (e: Exception) {
             null
         }
     }
 
     suspend fun getUserById(userId: String): AuthUser? {
-        return mongoService.getUserById(userId)?.let {
-            AuthUser(
-                id = it.id,
-                username = it.username,
-                email = it.email,
-                avatarId = it.avatarId
-            )
-        }
+        val user = mongoService.getUserById(userId) ?: return null
+
+        return AuthUser(
+            id = user.id,
+            username = user.username,
+            email = user.email,
+            avatarId = user.avatarId
+        )
     }
 
     fun generateId(): String {
