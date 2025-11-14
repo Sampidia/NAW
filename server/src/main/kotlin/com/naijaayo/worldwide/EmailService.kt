@@ -33,7 +33,7 @@ class EmailService(
             val session = createSession()
             val message = MimeMessage(session).apply {
                 setFrom(InternetAddress(fromEmail, "Naija Ayo Worldwide"))
-                addRecipient(Message.RecipientType.TO, InternetAddress(toEmail))
+                addRecipient(javax.mail.Message.RecipientType.TO, InternetAddress(toEmail))
                 subject = "Welcome to Naija Ayo Worldwide! 🌍"
                 setContent(createWelcomeEmailHtml(username), "text/html; charset=utf-8")
             }
@@ -214,7 +214,7 @@ class EmailService(
             val session = createSession()
             val message = MimeMessage(session).apply {
                 setFrom(InternetAddress(fromEmail, "Naija Ayo Worldwide"))
-                addRecipient(Message.RecipientType.TO, InternetAddress(toEmail))
+                addRecipient(javax.mail.Message.RecipientType.TO, InternetAddress(toEmail))
                 subject = "Reset Your Naija Ayo Worldwide Password"
                 setContent(createResetPasswordEmailHtml(resetToken), "text/html; charset=utf-8")
             }

@@ -52,7 +52,7 @@ fun Application.module() {
 
     // Configure content negotiation
     install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) {
-        kotlinx.serialization.json()
+        json(Json)
     }
 
     // Configure WebSockets
@@ -178,7 +178,8 @@ fun Application.configureRouting(authService: MongoAuthService, mongoService: Mo
                                 friendUsername = mongoRequest.fromUsername,
                                 friendEmail = mongoRequest.fromEmail,
                                 friendAvatarId = mongoRequest.fromAvatarId,
-                                status = FriendStatus.ACCEPTED
+                                status = FriendStatus.ACCEPTED,
+                                createdAt = System.currentTimeMillis()
                             )
 
                             val friendship2 = MongoFriend(
@@ -187,7 +188,8 @@ fun Application.configureRouting(authService: MongoAuthService, mongoService: Mo
                                 friendUsername = acceptingUser.username,
                                 friendEmail = acceptingUser.email,
                                 friendAvatarId = acceptingUser.avatarId,
-                                status = FriendStatus.ACCEPTED
+                                status = FriendStatus.ACCEPTED,
+                                createdAt = System.currentTimeMillis()
                             )
 
                             mongoService.addFriend(friendship1)
