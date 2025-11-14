@@ -11,7 +11,7 @@ class MongoAuthService(private val mongoService: MongoService) {
     private val jwtSecret = System.getenv("JWT_SECRET") ?: "your-secret-key-change-in-production"
     private val jwtIssuer = "naija-ayo-worldwide"
     private val jwtAudience = "naija-ayo-users"
-    private val algorithm = Algorithm.HMAC256(jwtSecret)
+    val algorithm = Algorithm.HMAC256(jwtSecret)
 
     suspend fun hashPassword(password: String): String {
         return BCrypt.withDefaults().hashToString(12, password.toCharArray())

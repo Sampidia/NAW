@@ -15,8 +15,8 @@ data class MongoUser(
     val passwordHash: String,
     val avatarId: String = "ayo",
     val coinBalance: Int = 0,
-    val createdAt: String = LocalDateTime.now().toString(),
-    val lastSeen: String = LocalDateTime.now().toString(),
+    val createdAt: Long = System.currentTimeMillis(),
+    val lastSeen: Long = System.currentTimeMillis(),
     val isOnline: Boolean = false
 )
 
@@ -31,8 +31,8 @@ data class MongoFriend(
     val friendEmail: String,
     val friendAvatarId: String,
     val status: FriendStatus = FriendStatus.ACCEPTED,
-    val createdAt: String = LocalDateTime.now().toString(),
-    val lastSeen: String = LocalDateTime.now().toString(),
+    val createdAt: Long = System.currentTimeMillis(),
+    val lastSeen: Long = System.currentTimeMillis(),
     val isOnline: Boolean = false
 )
 
@@ -47,7 +47,7 @@ data class MongoFriendRequest(
     val fromEmail: String,
     val fromAvatarId: String,
     val status: FriendRequestStatus = FriendRequestStatus.PENDING,
-    val createdAt: String = LocalDateTime.now().toString(),
+    val createdAt: Long = System.currentTimeMillis(),
     val message: String? = null
 )
 
@@ -60,7 +60,7 @@ data class MongoMessage(
     val toUserId: String,
     val fromUsername: String,
     val content: String,
-    val timestamp: String = LocalDateTime.now().toString(),
+    val timestamp: Long = System.currentTimeMillis(),
     val type: MessageType = MessageType.TEXT,
     val gameInvitationRoomId: String? = null,
     val gameInvitationHostUsername: String? = null,

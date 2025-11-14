@@ -13,6 +13,7 @@ import io.ktor.server.response.*
 import io.ktor.http.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.Serializable
+import com.auth0.jwt.JWT
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -38,7 +39,11 @@ fun Application.module() {
     val authService = MongoAuthService(mongoService)
     install(Authentication) {
         jwt("auth-jwt") {
-            verifier(authService.algorithm)
+            val jwtVerifier = JWT.require(authService.algorithm)
+                .withAudience("naija-ayo-users")
+                .withIssuer("naija-ayo-worldwide")
+                .build()
+            verifier(jwtVerifier)
             validate { credential ->
                 JWTPrincipal(credential.payload)
             }
