@@ -32,3 +32,10 @@ data class LoginRequest(
     val email: String,
     val password: String
 ) : Serializable
+
+data class AuthUser(
+    val id: String,
+    val username: String,
+    val email: String,
+    val avatarId: String
+)

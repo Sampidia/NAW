@@ -129,10 +129,10 @@ class MongoAuthService(private val mongoService: MongoService) {
         return try {
             val principal = call.principal<JWTPrincipal>()
             principal?.let {
-                val id = it.getClaim("userId", String::class) ?: return@getCurrentUser null
-                val username = it.getClaim("username", String::class) ?: return@getCurrentUser null
-                val email = it.getClaim("email", String::class) ?: return@getCurrentUser null
-                val avatarId = it.getClaim("avatarId", String::class) ?: return@getCurrentUser null
+                val id = it.getClaim("userId")?.asString() ?: return null
+                val username = it.getClaim("username")?.asString() ?: return null
+                val email = it.getClaim("email")?.asString() ?: return null
+                val avatarId = it.getClaim("avatarId")?.asString() ?: return null
 
                 AuthUser(id, username, email, avatarId)
             }
