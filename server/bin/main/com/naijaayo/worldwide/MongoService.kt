@@ -6,6 +6,7 @@ import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
+import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import java.time.LocalDateTime
 
@@ -44,7 +45,7 @@ class MongoService {
         return users.find(Filters.eq("email", email)).firstOrNull()
     }
 
-    suspend fun updateUser(id: String, updates: List<Updates>): Boolean {
+    suspend fun updateUser(id: String, updates: List<Bson>): Boolean {
         val result = users.updateOne(Filters.eq("_id", id), updates)
         return result.modifiedCount > 0
     }
@@ -155,7 +156,7 @@ class MongoService {
         return leaderboard.find(Filters.eq("userId", userId)).toList()
     }
 
-    suspend fun updateLeaderboardEntry(id: String, updates: List<Updates>): Boolean {
+    suspend fun updateLeaderboardEntry(id: String, updates: List<Bson>): Boolean {
         val result = leaderboard.updateOne(Filters.eq("_id", id), updates)
         return result.modifiedCount > 0
     }
@@ -170,7 +171,7 @@ class MongoService {
         return rooms.find(Filters.eq("roomId", roomId)).firstOrNull()
     }
 
-    suspend fun updateRoom(id: String, updates: List<Updates>): Boolean {
+    suspend fun updateRoom(id: String, updates: List<Bson>): Boolean {
         val result = rooms.updateOne(Filters.eq("_id", id), updates)
         return result.modifiedCount > 0
     }
