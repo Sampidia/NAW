@@ -9,6 +9,9 @@ COPY gradlew settings.gradle ./
 COPY server/build.gradle.kts server/
 COPY common/build.gradle.kts common/
 
+# Make gradlew executable
+RUN chmod +x gradlew
+
 # Copy source code
 COPY server/src server/src/
 COPY common/src common/src/
