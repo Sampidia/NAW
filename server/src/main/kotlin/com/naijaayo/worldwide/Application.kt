@@ -11,6 +11,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.Serializable
 import com.auth0.jwt.JWT
@@ -143,7 +144,8 @@ fun Application.configureRouting(authService: MongoAuthService, mongoService: Mo
                         fromUsername = currentUser.username,
                         fromEmail = currentUser.email,
                         fromAvatarId = currentUser.avatarId,
-                        status = FriendRequestStatus.PENDING
+                        status = FriendRequestStatus.PENDING,
+                        createdAt = System.currentTimeMillis()
                     )
                     mongoService.createFriendRequest(mongoRequest)
 
