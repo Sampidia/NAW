@@ -6,6 +6,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.principal
 import java.util.*
 
 class MongoAuthService(private val mongoService: MongoService) {
