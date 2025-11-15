@@ -35,7 +35,7 @@ dependencies {
     implementation("at.favre.lib:bcrypt:0.10.2")
 
     // Logging
-    implementation("ch.qos.logback:logback-classic:1.4.14")
+    implementation("ch.qos.logback:logback-classic:1.2.12")
 
     // Testing
     testImplementation("io.ktor:ktor-server-tests-jvm:2.3.7")
