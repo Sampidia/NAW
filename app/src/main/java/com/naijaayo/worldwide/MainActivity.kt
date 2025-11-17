@@ -70,8 +70,8 @@ class MainActivity : AppCompatActivity() {
     // Sound management
     private lateinit var soundManager: SoundManager
 
-    // Avatar management (now dynamic from GameViewModel and Sessions)
-    private var currentPlayer1AvatarId: String = com.naijaayo.worldwide.theme.AvatarPreferenceManager.getUserAvatar() // Use user's selected avatar from profile settings
+    // Avatar management (initialize in onCreate, not here)
+    private var currentPlayer1AvatarId: String = "ayo"  // Default value
     private var currentPlayer2AvatarId: String = "ai"   // Default AI avatar, or opponent in multiplayer
 
     // Game state tracking for smart animations
@@ -103,6 +103,14 @@ class MainActivity : AppCompatActivity() {
 
         // Initialize session manager
         com.naijaayo.worldwide.auth.SessionManager.initialize(this)
+
+        // Set player 1 avatar from session/preferences AFTER initialization
+        val currentUser = com.naijaayo.worldwide.auth.SessionManager.getCurrentUser()
+        if (currentUser != null) {
+            currentPlayer1AvatarId = currentUser.avatarId
+        } else {
+            currentPlayer1AvatarId = com.naijaayo.worldwide.theme.AvatarPreferenceManager.getUserAvatar()
+        }
 
         // Initialize board manager
         BoardManager.initialize(this)

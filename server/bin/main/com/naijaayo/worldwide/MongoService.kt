@@ -29,8 +29,15 @@ class MongoService {
 
     // User operations
     suspend fun createUser(user: MongoUser): String {
-        users.insertOne(user)
-        return user.id
+        try {
+            println("MongoService: Attempting to insert user with id=${user.id}")
+            val result = users.insertOne(user)
+            println("MongoService: Insert successful, insertedId=${result.insertedId}")
+            return user.id
+        } catch (e: Exception) {
+            println("MongoService: Insert failed with error: $e")
+            throw e  // Re-throw to fail the request
+        }
     }
 
     suspend fun getUserById(id: String): MongoUser? {

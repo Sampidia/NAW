@@ -18,6 +18,9 @@ class MainMenuActivity : AppCompatActivity() {
         NigerianThemeManager.initialize(this)
         NigerianThemeManager.applyThemeToActivity(this)
 
+        // Initialize session manager
+        com.naijaayo.worldwide.auth.SessionManager.initialize(this)
+
         // Hide action bar to show only the logo image
         supportActionBar?.hide()
 

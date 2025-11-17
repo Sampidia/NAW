@@ -61,8 +61,8 @@ class AuthDialog(
     }
 
     private fun updateUI() {
-        val signUpLayout = findViewById<android.widget.LinearLayout>(R.id.signUpLayout)
-        val signInLayout = findViewById<android.widget.LinearLayout>(R.id.signInLayout)
+        val signUpLayout = findViewById<androidx.constraintlayout.widget.ConstraintLayout>(R.id.signUpLayout)
+        val signInLayout = findViewById<androidx.constraintlayout.widget.ConstraintLayout>(R.id.signInLayout)
         val authActionButton = findViewById<Button>(R.id.authActionButton)
         val dialogTitle = findViewById<TextView>(R.id.dialogTitle)
         val errorTextView = findViewById<TextView>(R.id.errorTextView)

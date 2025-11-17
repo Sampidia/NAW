@@ -11,7 +11,7 @@ pluginManagement {
         id 'org.jetbrains.kotlin.kapt' version '1.9.24'
         id 'org.jetbrains.kotlin.plugin.parcelize' version '1.9.24'
         id 'com.github.johnrengelman.shadow' version '8.1.1'
-        id 'com.android.application' version '8.6.1'
+        id 'com.android.application' version '8.4.2'
     }
 }
 
