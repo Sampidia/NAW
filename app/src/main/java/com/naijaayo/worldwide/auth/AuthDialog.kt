@@ -4,23 +4,19 @@ import android.app.Dialog
 import android.content.Context
 import android.view.LayoutInflater
 import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
+import com.naijaayo.worldwide.network.toUser
 import com.google.android.material.tabs.TabLayout
-import com.naijaayo.worldwide.AuthRequest
-import com.naijaayo.worldwide.AuthResponse
-import com.naijaayo.worldwide.LoginRequest
 import com.naijaayo.worldwide.R
+import com.naijaayo.worldwide.network.RetrofitClient
+import com.naijaayo.worldwide.network.RegisterRequest
+import com.naijaayo.worldwide.network.LoginRequest
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 // import com.naijaayo.worldwide.databinding.DialogAuthBinding
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import com.google.gson.Gson
-import java.io.IOException
 
 class AuthDialog(
     private val context: Context,
@@ -29,9 +25,6 @@ class AuthDialog(
 
     // private lateinit var binding: DialogAuthBinding
     private var isSignUpMode = true
-    private val client = OkHttpClient()
-    private val gson = Gson()
-    private val baseUrl = "https://ayo.sampidia.com" // Update with your Render URL
 
     init {
         setupDialog()
@@ -122,8 +115,23 @@ class AuthDialog(
             password.length < 6 -> showError("Password must be at least 6 characters")
             !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> showError("Invalid email format")
             else -> {
-                // Call actual server API
-                signUp(username, email, password)
+                GlobalScope.launch(Dispatchers.Main) {
+                    try {
+                        val response = RetrofitClient.instance.register(RegisterRequest(username, email, password))
+                        val user = response.user.toUser()
+                        SessionManager.saveUserSession(user, response.token)
+                        onAuthSuccess(user.id, user.username, user.avatarId)
+                        dismiss()
+                    } catch (e: Exception) {
+                        val errorMessage = when (e) {
+                            is retrofit2.HttpException -> {
+                                e.response()?.errorBody()?.string() ?: "Registration failed"
+                            }
+                            else -> "Network error: ${e.message}"
+                        }
+                        showError(errorMessage)
+                    }
+                }
             }
         }
     }
@@ -138,139 +146,28 @@ class AuthDialog(
             password.isEmpty() -> showError("Password is required")
             !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> showError("Invalid email format")
             else -> {
-                // Call actual server API
-                signIn(email, password)
+                GlobalScope.launch(Dispatchers.Main) {
+                    try {
+                        val response = RetrofitClient.instance.login(LoginRequest(email, password))
+                        val user = response.user.toUser()
+                        SessionManager.saveUserSession(user, response.token)
+                        onAuthSuccess(user.id, user.username, user.avatarId)
+                        dismiss()
+                    } catch (e: Exception) {
+                        val errorMessage = when (e) {
+                            is retrofit2.HttpException -> {
+                                e.response()?.errorBody()?.string() ?: "Login failed"
+                            }
+                            else -> "Network error: ${e.message}"
+                        }
+                        showError(errorMessage)
+                    }
+                }
             }
         }
     }
 
-    private fun signUp(username: String, email: String, password: String) {
-        val registerRequest = RegisterRequest(username, email, password)
-        val jsonMediaType = "application/json; charset=utf-8".toMediaType()
-        val requestBody = gson.toJson(registerRequest).toRequestBody(jsonMediaType)
 
-        val request = Request.Builder()
-            .url("$baseUrl/auth/register")
-            .post(requestBody)
-            .build()
-
-        client.newCall(request).enqueue(object : okhttp3.Callback {
-            override fun onFailure(call: okhttp3.Call, e: IOException) {
-                (context as? android.app.Activity)?.runOnUiThread {
-                    showError("Network error: ${e.message}")
-                }
-            }
-
-            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                try {
-                    val responseBody = response.body?.string()
-                    if (response.isSuccessful && responseBody != null) {
-                        val authResponse = gson.fromJson(responseBody, AuthResponse::class.java)
-                        val user = authResponse.user
-
-                        // Save session
-                        val sessionUser = com.naijaayo.worldwide.User(
-                            id = user.id,
-                            username = user.username,
-                            email = user.email,
-                            avatarId = user.avatarId,
-                            createdAt = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).format(java.util.Date()),
-                            isOnline = true
-                        )
-
-                        SessionManager.saveUserSession(sessionUser, authResponse.token)
-
-                        (context as? android.app.Activity)?.runOnUiThread {
-                            onAuthSuccess(user.id, user.username, user.avatarId)
-                            dismiss()
-                        }
-                    } else {
-                        val errorMsg = if (responseBody != null) {
-                            try {
-                                val errorResponse = gson.fromJson(responseBody, Map::class.java)
-                                errorResponse["message"] as? String ?: "Registration failed"
-                            } catch (e: Exception) {
-                                "Registration failed"
-                            }
-                        } else {
-                            "Registration failed"
-                        }
-                        (context as? android.app.Activity)?.runOnUiThread {
-                            showError(errorMsg)
-                        }
-                    }
-                } catch (e: Exception) {
-                    (context as? android.app.Activity)?.runOnUiThread {
-                        showError("Registration error: ${e.message}")
-                    }
-                }
-            }
-        })
-    }
-
-    private fun signIn(email: String, password: String) {
-        val loginRequest = LoginRequest(email, password)
-        val jsonMediaType = "application/json; charset=utf-8".toMediaType()
-        val requestBody = gson.toJson(loginRequest).toRequestBody(jsonMediaType)
-
-        val request = Request.Builder()
-            .url("$baseUrl/auth/login")
-            .post(requestBody)
-            .build()
-
-        client.newCall(request).enqueue(object : okhttp3.Callback {
-            override fun onFailure(call: okhttp3.Call, e: IOException) {
-                (context as? android.app.Activity)?.runOnUiThread {
-                    showError("Network error: ${e.message}")
-                }
-            }
-
-            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                try {
-                    val responseBody = response.body?.string()
-                    if (response.isSuccessful && responseBody != null) {
-                        val authResponse = gson.fromJson(responseBody, AuthResponse::class.java)
-                        val user = authResponse.user
-
-                        // Save session
-                        val sessionUser = com.naijaayo.worldwide.User(
-                            id = user.id,
-                            username = user.username,
-                            email = user.email,
-                            avatarId = user.avatarId,
-                            createdAt = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).format(java.util.Date()),
-                            isOnline = true
-                        )
-
-                        SessionManager.saveUserSession(sessionUser, authResponse.token)
-
-                        (context as? android.app.Activity)?.runOnUiThread {
-                            onAuthSuccess(user.id, user.username, user.avatarId)
-                            dismiss()
-                        }
-                    } else {
-                        val errorMsg = if (responseBody != null) {
-                            try {
-                                val errorResponse = gson.fromJson(responseBody, Map::class.java)
-                                errorResponse["message"] as? String ?: "Login failed"
-                            } catch (e: Exception) {
-                                "Login failed"
-                            }
-                        } else {
-                            "Login failed"
-                        }
-                        (context as? android.app.Activity)?.runOnUiThread {
-                            showError(errorMsg)
-                        }
-                    }
-                } catch (e: Exception) {
-                    (context as? android.app.Activity)?.runOnUiThread {
-                        showError("Login error: ${e.message}")
-                    }
-                }
-            }
-        })
-    }
 
     private fun showError(message: String) {
         val errorTextView = findViewById<TextView>(R.id.errorTextView)

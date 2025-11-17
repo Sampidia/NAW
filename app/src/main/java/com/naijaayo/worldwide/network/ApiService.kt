@@ -11,6 +11,12 @@ import retrofit2.http.Path
 
 interface ApiService {
 
+    @POST("auth/register")
+    suspend fun register(@Body request: RegisterRequest): AuthResponse
+
+    @POST("auth/login")
+    suspend fun login(@Body request: LoginRequest): AuthResponse
+
     @GET("/api/rooms")
     suspend fun getRooms(): List<Room>
 

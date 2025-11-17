@@ -86,6 +86,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Initialize preferences and session managers first
+        com.naijaayo.worldwide.theme.AvatarPreferenceManager.initialize(this)
+        com.naijaayo.worldwide.auth.SessionManager.initialize(this)
+
         // ✅ Hide action bar to remove "Naija Ayo Worldwide" title
         supportActionBar?.hide()
 
