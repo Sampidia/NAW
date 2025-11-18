@@ -30,5 +30,5 @@ COPY --from=builder /app/server/build/libs/naija-ayo-server.jar app.jar
 # Expose the port Render will map to
 EXPOSE 10000
 
-# Run the application
-CMD ["java", "-jar", "app.jar"]
+# Run the application with specific memory limits for a 512MB container
+CMD ["java", "-Xms256m", "-Xmx300m", "-jar", "app.jar"]

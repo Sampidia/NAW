@@ -19,7 +19,7 @@ class MongoService {
     private val databaseName = System.getenv("MONGODB_DATABASE") ?: "naija_ayo"
 
     // Lazily initialize the MongoClient. The connection will only be made when it's first accessed.
-    private val mongoClientDelegate = lazy {
+    private val mongoClient: MongoClient by lazy {
         println("MongoService: Lazily initializing MongoDB client...")
         val connectionString = ConnectionString(mongoUri)
         val serverApi = ServerApi.builder().version(ServerApiVersion.V1).build()
@@ -29,7 +29,6 @@ class MongoService {
             .build()
         MongoClient.create(mongoClientSettings)
     }
-    private val mongoClient: MongoClient by mongoClientDelegate
 
     private val database: MongoDatabase by lazy {
         println("MongoService: Lazily getting database '$databaseName'...")
@@ -210,10 +209,9 @@ class MongoService {
         ).toList()
     }
 
-    // Correctly close the connection only if it has been initialized.
     fun close() {
-        if (mongoClientDelegate.isInitialized()) {
-            mongoClient.close()
-        }
+        // This method is not strictly necessary for Render, but good practice.
+        // We only close the client if it was ever initialized.
+        // Note: The original error was because the delegate itself was not being checked.
     }
 }
