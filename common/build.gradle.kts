@@ -1,16 +1,14 @@
 plugins {
     kotlin("jvm")
-    kotlin("plugin.serialization")
 }
 
-group = "com.naijaayo.worldwide"
+group = "com.naijaayo"
 version = "1.0-SNAPSHOT"
 
-kotlin {
-    jvmToolchain(8)
+dependencies {
+    testImplementation(kotlin("test"))
 }
 
-dependencies {
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+kotlin {
+    jvmToolchain(17)
 }
