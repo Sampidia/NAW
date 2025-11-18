@@ -30,10 +30,5 @@ COPY --from=0 /app/server/build/libs/naija-ayo-server.jar app.jar
 # Expose port
 EXPOSE 8080
 
-# Set environment variables
-ENV MONGODB_URI=""
-ENV MONGODB_DATABASE="naija_ayo"
-ENV JWT_SECRET=""
-
 # Run the application
 CMD ["java", "-jar", "app.jar"]
