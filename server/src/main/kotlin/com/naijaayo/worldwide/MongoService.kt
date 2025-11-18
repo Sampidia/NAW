@@ -21,14 +21,11 @@ class MongoService {
     private val databaseName = System.getenv("MONGODB_DATABASE") ?: "naija_ayo"
 
     init {
-        // Check if environment variables are set
         val uriFromEnv = System.getenv("MONGODB_URI")
         val dbNameFromEnv = System.getenv("MONGODB_DATABASE")
 
         if (uriFromEnv.isNullOrEmpty() || dbNameFromEnv.isNullOrEmpty()) {
             println("MongoService: WARNING - MongoDB environment variables not set!")
-            println("MongoService: MONGODB_URI is ${if (uriFromEnv.isNullOrEmpty()) "MISSING" else "set"}")
-            println("MongoService: MONGODB_DATABASE is ${if (dbNameFromEnv.isNullOrEmpty()) "MISSING" else "set"}")
         } else {
             println("MongoService: Environment variables are properly configured")
         }
@@ -51,23 +48,7 @@ class MongoService {
         mongoClient = MongoClient.create(mongoClientSettings)
         database = mongoClient.getDatabase(databaseName)
 
-        println("MongoService: Initializing MongoDB connection...")
-        println("MongoService: Database name: $databaseName")
-
-        runBlocking {
-            try {
-                database.runCommand(Document("ping", 1))
-                println("MongoService: MongoDB connection successful")
-            } catch (e: Exception) {
-                println("MongoService: MongoDB connection FAILED!")
-                e.printStackTrace() // Print the full stack trace for detailed debugging
-                throw e // Re-throw to fail application startup if MongoDB is unavailable
-            }
-        }
-    }
-
-    private fun sanitizeUri(uri: String): String {
-        return uri.replace(Regex("://(.*?):(.*?)@"), "://***:***@")
+        println("MongoService: MongoDB client initialized.")
     }
 
     // Collections
