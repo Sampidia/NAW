@@ -29,8 +29,6 @@ class MongoService {
             println("MongoService: WARNING - MongoDB environment variables not set!")
             println("MongoService: MONGODB_URI is ${if (uriFromEnv.isNullOrEmpty()) "MISSING" else "set"}")
             println("MongoService: MONGODB_DATABASE is ${if (dbNameFromEnv.isNullOrEmpty()) "MISSING" else "set"}")
-            println("MongoService: Using fallback values (this will likely cause connection failures)")
-            println("MongoService: Set MONGODB_URI and MONGODB_DATABASE environment variables in Render")
         } else {
             println("MongoService: Environment variables are properly configured")
         }
@@ -40,7 +38,6 @@ class MongoService {
     private val database: MongoDatabase
 
     init {
-        // Create MongoDB client with proper Atlas configuration
         val connectionString = ConnectionString(mongoUri)
         val serverApi = ServerApi.builder()
             .version(ServerApiVersion.V1)
@@ -56,23 +53,20 @@ class MongoService {
 
         println("MongoService: Initializing MongoDB connection...")
         println("MongoService: Database name: $databaseName")
-        println("MongoService: MongoDB URI: ${sanitizeUri(mongoUri)}")
 
         runBlocking {
             try {
-                // Test connection using ping command as per Atlas docs
                 database.runCommand(Document("ping", 1))
                 println("MongoService: MongoDB connection successful")
             } catch (e: Exception) {
-                println("MongoService: MongoDB connection FAILED: ${e.message}")
-                println("MongoService: Please check your MongoDB URI and network connectivity")
+                println("MongoService: MongoDB connection FAILED!")
+                e.printStackTrace() // Print the full stack trace for detailed debugging
                 throw e // Re-throw to fail application startup if MongoDB is unavailable
             }
         }
     }
 
     private fun sanitizeUri(uri: String): String {
-        // Sanitize URI for logging by hiding credentials
         return uri.replace(Regex("://(.*?):(.*?)@"), "://***:***@")
     }
 
@@ -95,7 +89,7 @@ class MongoService {
             return user.id
         } catch (e: Exception) {
             println("MongoService: Insert failed with error: $e")
-            throw e  // Re-throw to fail the request
+            throw e
         }
     }
 
