@@ -8,8 +8,10 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
 import java.util.*
+import org.slf4j.LoggerFactory
 
 class MongoAuthService(private val mongoService: MongoService) {
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val jwtSecret = System.getenv("JWT_SECRET") ?: "your-secret-key-change-in-production"
     private val jwtIssuer = "naija-ayo-worldwide"
     private val jwtAudience = "naija-ayo-users"
@@ -58,7 +60,9 @@ class MongoAuthService(private val mongoService: MongoService) {
         return try {
             // Check if username or email already exists
             val existingUserByUsername = mongoService.getUserByUsername(username)
+            logger.info("Existing user by username: {}", existingUserByUsername)
             val existingUserByEmail = mongoService.getUserByEmail(email)
+            logger.info("Existing user by email: {}", existingUserByEmail)
 
             if (existingUserByUsername != null || existingUserByEmail != null) {
                 return Result.failure(Exception("Username or email already exists"))
@@ -97,6 +101,7 @@ class MongoAuthService(private val mongoService: MongoService) {
 
             Result.success(AuthUser(userId, username, email, "ayo"))
         } catch (e: Exception) {
+            logger.error("Error during user registration", e)
             Result.failure(e)
         }
     }
