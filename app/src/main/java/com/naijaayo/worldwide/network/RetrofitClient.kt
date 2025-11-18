@@ -5,8 +5,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    // Production server URL for Render deployment
-    private const val BASE_URL = "https://ayo.sampidia.com/"
+    // Temporary fallback URL for Render deployment (Cloudflare issues)
+    private const val BASE_URL = "https://naw-6tlj.onrender.com/"
 
     private val okHttpClient by lazy {
         OkHttpClient.Builder()

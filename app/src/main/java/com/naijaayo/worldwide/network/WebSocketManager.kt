@@ -35,7 +35,7 @@ class WebSocketManager {
             try {
                 client.webSocket(
                     method = HttpMethod.Get,
-                    host = "ayo.sampidia.com",
+                    host = "naw-6tlj.onrender.com",
                     port = 443,
                     path = "/ws/messages/$userId"
                 ) {

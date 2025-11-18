@@ -30,7 +30,7 @@ class SocketManager {
     fun connect() {
         coroutineScope.launch {
             try {
-                client.webSocket(method = HttpMethod.Get, host = "ayo.sampidia.com", port = 443, path = "/ws") {
+                client.webSocket(method = HttpMethod.Get, host = "naw-6tlj.onrender.com", port = 443, path = "/ws") {
                     session = this
                     connectionChannel.send(true)
                     listen() // Start listening for incoming messages
