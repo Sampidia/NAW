@@ -20,6 +20,22 @@ class MongoService {
     private val mongoUri = System.getenv("MONGODB_URI") ?: "mongodb://localhost:27017"
     private val databaseName = System.getenv("MONGODB_DATABASE") ?: "naija_ayo"
 
+    init {
+        // Check if environment variables are set
+        val uriFromEnv = System.getenv("MONGODB_URI")
+        val dbNameFromEnv = System.getenv("MONGODB_DATABASE")
+
+        if (uriFromEnv.isNullOrEmpty() || dbNameFromEnv.isNullOrEmpty()) {
+            println("MongoService: WARNING - MongoDB environment variables not set!")
+            println("MongoService: MONGODB_URI is ${if (uriFromEnv.isNullOrEmpty()) "MISSING" else "set"}")
+            println("MongoService: MONGODB_DATABASE is ${if (dbNameFromEnv.isNullOrEmpty()) "MISSING" else "set"}")
+            println("MongoService: Using fallback values (this will likely cause connection failures)")
+            println("MongoService: Set MONGODB_URI and MONGODB_DATABASE environment variables in Render")
+        } else {
+            println("MongoService: Environment variables are properly configured")
+        }
+    }
+
     private val mongoClient: MongoClient
     private val database: MongoDatabase
 
