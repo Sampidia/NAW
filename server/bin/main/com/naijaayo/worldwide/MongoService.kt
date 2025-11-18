@@ -10,6 +10,7 @@ import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
@@ -41,14 +42,16 @@ class MongoService {
         println("MongoService: Database name: $databaseName")
         println("MongoService: MongoDB URI: ${sanitizeUri(mongoUri)}")
 
-        try {
-            // Test connection using ping command as per Atlas docs
-            database.runCommand(Document("ping", 1))
-            println("MongoService: MongoDB connection successful")
-        } catch (e: Exception) {
-            println("MongoService: MongoDB connection FAILED: ${e.message}")
-            println("MongoService: Please check your MongoDB URI and network connectivity")
-            throw e // Re-throw to fail application startup if MongoDB is unavailable
+        runBlocking {
+            try {
+                // Test connection using ping command as per Atlas docs
+                database.runCommand(Document("ping", 1))
+                println("MongoService: MongoDB connection successful")
+            } catch (e: Exception) {
+                println("MongoService: MongoDB connection FAILED: ${e.message}")
+                println("MongoService: Please check your MongoDB URI and network connectivity")
+                throw e // Re-throw to fail application startup if MongoDB is unavailable
+            }
         }
     }
 
