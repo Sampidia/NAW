@@ -68,6 +68,11 @@ fun Application.configureRouting(authService: MongoAuthService, mongoService: Mo
     val userSessions = ConcurrentHashMap<String, DefaultWebSocketSession>()
 
     routing {
+        // Health check endpoint
+        get("/") {
+            call.respondText("Naija Ayo Server is running.", ContentType.Text.Plain, HttpStatusCode.OK)
+        }
+
         // Authentication endpoints
         post("/auth/register") {
             println("Server: Registration request received")
