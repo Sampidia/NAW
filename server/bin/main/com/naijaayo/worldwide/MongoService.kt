@@ -1,11 +1,16 @@
 package com.naijaayo.worldwide
 
+import com.mongodb.ConnectionString
+import com.mongodb.MongoClientSettings
+import com.mongodb.ServerApi
+import com.mongodb.ServerApiVersion
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
+import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import java.time.LocalDateTime
@@ -14,8 +19,43 @@ class MongoService {
     private val mongoUri = System.getenv("MONGODB_URI") ?: "mongodb://localhost:27017"
     private val databaseName = System.getenv("MONGODB_DATABASE") ?: "naija_ayo"
 
-    private val mongoClient: MongoClient = MongoClient.create(mongoUri)
-    private val database: MongoDatabase = mongoClient.getDatabase(databaseName)
+    private val mongoClient: MongoClient
+    private val database: MongoDatabase
+
+    init {
+        // Create MongoDB client with proper Atlas configuration
+        val connectionString = ConnectionString(mongoUri)
+        val serverApi = ServerApi.builder()
+            .version(ServerApiVersion.V1)
+            .build()
+
+        val mongoClientSettings = MongoClientSettings.builder()
+            .applyConnectionString(connectionString)
+            .serverApi(serverApi)
+            .build()
+
+        mongoClient = MongoClient.create(mongoClientSettings)
+        database = mongoClient.getDatabase(databaseName)
+
+        println("MongoService: Initializing MongoDB connection...")
+        println("MongoService: Database name: $databaseName")
+        println("MongoService: MongoDB URI: ${sanitizeUri(mongoUri)}")
+
+        try {
+            // Test connection using ping command as per Atlas docs
+            database.runCommand(Document("ping", 1))
+            println("MongoService: MongoDB connection successful")
+        } catch (e: Exception) {
+            println("MongoService: MongoDB connection FAILED: ${e.message}")
+            println("MongoService: Please check your MongoDB URI and network connectivity")
+            throw e // Re-throw to fail application startup if MongoDB is unavailable
+        }
+    }
+
+    private fun sanitizeUri(uri: String): String {
+        // Sanitize URI for logging by hiding credentials
+        return uri.replace(Regex("://(.*?):(.*?)@"), "://***:***@")
+    }
 
     // Collections
     private val users = database.getCollection<MongoUser>("users")
