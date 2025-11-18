@@ -18,12 +18,9 @@ class MongoService {
     private val mongoUri = System.getenv("MONGODB_URI") ?: "mongodb://localhost:27017"
     private val databaseName = System.getenv("MONGODB_DATABASE") ?: "naija_ayo"
 
-    private val mongoClient: MongoClient by lazy {
+    // Lazily initialize the MongoClient. The connection will only be made when it's first accessed.
+    private val mongoClientDelegate = lazy {
         println("MongoService: Lazily initializing MongoDB client...")
-        val uriFromEnv = System.getenv("MONGODB_URI")
-        if (uriFromEnv.isNullOrEmpty()) {
-            println("MongoService: WARNING - MONGODB_URI environment variable is not set!")
-        }
         val connectionString = ConnectionString(mongoUri)
         val serverApi = ServerApi.builder().version(ServerApiVersion.V1).build()
         val mongoClientSettings = MongoClientSettings.builder()
@@ -32,6 +29,7 @@ class MongoService {
             .build()
         MongoClient.create(mongoClientSettings)
     }
+    private val mongoClient: MongoClient by mongoClientDelegate
 
     private val database: MongoDatabase by lazy {
         println("MongoService: Lazily getting database '$databaseName'...")
@@ -212,12 +210,9 @@ class MongoService {
         ).toList()
     }
 
+    // Correctly close the connection only if it has been initialized.
     fun close() {
-        if (mongoClient is Lazy<*>) {
-            if ((mongoClient as Lazy<*>).isInitialized()) {
-                mongoClient.close()
-            }
-        } else {
+        if (mongoClientDelegate.isInitialized()) {
             mongoClient.close()
         }
     }

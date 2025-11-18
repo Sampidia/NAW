@@ -10,68 +10,46 @@ import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.runBlocking
 import org.bson.Document
 import org.bson.conversions.Bson
-import org.bson.types.ObjectId
 import java.time.LocalDateTime
 
 class MongoService {
     private val mongoUri = System.getenv("MONGODB_URI") ?: "mongodb://localhost:27017"
     private val databaseName = System.getenv("MONGODB_DATABASE") ?: "naija_ayo"
 
-    init {
-        val uriFromEnv = System.getenv("MONGODB_URI")
-        val dbNameFromEnv = System.getenv("MONGODB_DATABASE")
-
-        if (uriFromEnv.isNullOrEmpty() || dbNameFromEnv.isNullOrEmpty()) {
-            println("MongoService: WARNING - MongoDB environment variables not set!")
-        } else {
-            println("MongoService: Environment variables are properly configured")
-        }
-    }
-
-    private val mongoClient: MongoClient
-    private val database: MongoDatabase
-
-    init {
+    // Lazily initialize the MongoClient. The connection will only be made when it's first accessed.
+    private val mongoClientDelegate = lazy {
+        println("MongoService: Lazily initializing MongoDB client...")
         val connectionString = ConnectionString(mongoUri)
-        val serverApi = ServerApi.builder()
-            .version(ServerApiVersion.V1)
-            .build()
-
+        val serverApi = ServerApi.builder().version(ServerApiVersion.V1).build()
         val mongoClientSettings = MongoClientSettings.builder()
             .applyConnectionString(connectionString)
             .serverApi(serverApi)
             .build()
+        MongoClient.create(mongoClientSettings)
+    }
+    private val mongoClient: MongoClient by mongoClientDelegate
 
-        mongoClient = MongoClient.create(mongoClientSettings)
-        database = mongoClient.getDatabase(databaseName)
-
-        println("MongoService: MongoDB client initialized.")
+    private val database: MongoDatabase by lazy {
+        println("MongoService: Lazily getting database '$databaseName'...")
+        mongoClient.getDatabase(databaseName)
     }
 
     // Collections
-    private val users = database.getCollection<MongoUser>("users")
-    private val friends = database.getCollection<MongoFriend>("friends")
-    private val friendRequests = database.getCollection<MongoFriendRequest>("friend_requests")
-    private val messages = database.getCollection<MongoMessage>("messages")
-    private val savedGames = database.getCollection<MongoSavedGame>("saved_games")
-    private val leaderboard = database.getCollection<MongoLeaderboardEntry>("leaderboard")
-    private val rooms = database.getCollection<MongoRoom>("rooms")
-    private val gameResults = database.getCollection<MongoGameResult>("game_results")
+    private val users by lazy { database.getCollection<MongoUser>("users") }
+    private val friends by lazy { database.getCollection<MongoFriend>("friends") }
+    private val friendRequests by lazy { database.getCollection<MongoFriendRequest>("friend_requests") }
+    private val messages by lazy { database.getCollection<MongoMessage>("messages") }
+    private val savedGames by lazy { database.getCollection<MongoSavedGame>("saved_games") }
+    private val leaderboard by lazy { database.getCollection<MongoLeaderboardEntry>("leaderboard") }
+    private val rooms by lazy { database.getCollection<MongoRoom>("rooms") }
+    private val gameResults by lazy { database.getCollection<MongoGameResult>("game_results") }
 
     // User operations
     suspend fun createUser(user: MongoUser): String {
-        try {
-            println("MongoService: Attempting to insert user with id=${user.id}")
-            val result = users.insertOne(user)
-            println("MongoService: Insert successful, insertedId=${result.insertedId}")
-            return user.id
-        } catch (e: Exception) {
-            println("MongoService: Insert failed with error: $e")
-            throw e
-        }
+        users.insertOne(user)
+        return user.id
     }
 
     suspend fun getUserById(id: String): MongoUser? {
@@ -232,7 +210,10 @@ class MongoService {
         ).toList()
     }
 
+    // Correctly close the connection only if it has been initialized.
     fun close() {
-        mongoClient.close()
+        if (mongoClientDelegate.isInitialized()) {
+            mongoClient.close()
+        }
     }
 }
