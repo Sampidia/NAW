@@ -70,17 +70,22 @@ fun Application.configureRouting(authService: MongoAuthService, mongoService: Mo
     routing {
         // Authentication endpoints
         post("/auth/register") {
+            println("Server: Registration request received")
             try {
                 val request = call.receive<RegisterRequest>()
+                println("Server: Registration attempt for username: ${request.username}")
                 val result = authService.registerUser(request.username, request.email, request.password)
 
                 result.onSuccess { user ->
+                    println("Server: Registration successful for ${request.username}")
                     val token = authService.generateToken(user)
                     call.respond(AuthResponse(token, user))
                 }.onFailure { error ->
+                    println("Server: Registration failed for ${request.username}: ${error.message}")
                     call.respondText(error.message ?: "Registration failed", status = HttpStatusCode.BadRequest)
                 }
             } catch (e: Exception) {
+                println("Server: Registration exception for request: $e")
                 call.respondText("Invalid request", status = HttpStatusCode.BadRequest)
             }
         }
