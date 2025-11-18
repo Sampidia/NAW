@@ -1,5 +1,5 @@
 # Build stage
-FROM eclipse-temurin:8-jdk
+FROM eclipse-temurin:17-jdk-focal as builder
 
 WORKDIR /app
 
@@ -20,15 +20,15 @@ COPY common/src common/src/
 RUN ./gradlew :server:shadowJar --no-daemon
 
 # Runtime stage
-FROM eclipse-temurin:8-jre
+FROM eclipse-temurin:17-jre-focal
 
 WORKDIR /app
 
-# Copy the built JAR (shadowJar produces naija-ayo-server.jar)
-COPY --from=0 /app/server/build/libs/naija-ayo-server.jar app.jar
+# Copy the built JAR from the builder stage
+COPY --from=builder /app/server/build/libs/naija-ayo-server.jar app.jar
 
-# Expose port
-EXPOSE 8080
+# Expose the port Render will map to
+EXPOSE 10000
 
 # Run the application
 CMD ["java", "-jar", "app.jar"]
