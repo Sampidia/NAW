@@ -28,10 +28,10 @@ dependencies {
 
     // PostgreSQL and Exposed dependencies
     implementation("org.postgresql:postgresql:42.5.4")
-    implementation("org.jetbrains.exposed:exposed-core:0.41.1")
-    implementation("org.jetbrains.exposed:exposed-dao:0.41.1")
-    implementation("org.jetbrains.exposed:exposed-jdbc:0.41.1")
-    implementation("org.jetbrains.exposed:exposed-java-time:0.41.1") // For Java 8+ datetime support
+    implementation("org.jetbrains.exposed:exposed-core:0.61.0")
+    implementation("org.jetbrains.exposed:exposed-dao:0.61.0")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.61.0")
+    implementation("org.jetbrains.exposed:exposed-java-time:0.61.0") // For Java 8+ datetime support
     implementation("com.zaxxer:HikariCP:5.0.1") // High-performance JDBC connection pool
 
     // Password hashing

@@ -6,6 +6,7 @@ import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.net.URI
@@ -15,8 +16,8 @@ object DatabaseFactory {
     fun init() {
         val dbUri = URI(System.getenv("DATABASE_URL"))
 
-        val username = dbUri.userInfo.split(":").toTypedArray()[0]
-        val password = dbUri.userInfo.split(":").toTypedArray()[1]
+        val username = dbUri.userInfo.split(":")[0]
+        val password = dbUri.userInfo.split(":")[1]
         val dbUrl = "jdbc:postgresql://" + dbUri.host + ':' + dbUri.port + dbUri.path + "?sslmode=require"
 
         val dataSource = hikari(dbUrl, username, password)
@@ -53,6 +54,6 @@ object DatabaseFactory {
         return HikariDataSource(config)
     }
 
-    suspend fun <T> dbQuery(block: suspend () -> T): T =
-        newSuspendedTransaction(Dispatchers.IO) { block() }
+    suspend fun <T> dbQuery(block: suspend Transaction.() -> T): T =
+        newSuspendedTransaction(Dispatchers.IO, block = block)
 }
