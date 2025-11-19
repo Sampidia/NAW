@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.update
 import java.time.LocalDateTime
+import org.jetbrains.exposed.sql.javatime.timestamp
 
 class DatabaseService {
 
