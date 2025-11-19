@@ -16,6 +16,9 @@ RUN chmod +x gradlew
 COPY server/src server/src/
 COPY common/src common/src/
 
+# Clean any stale Kotlin daemon sessions to prevent compilation errors
+RUN rm -rf ~/.kotlin/sessions || true
+
 # Build the application
 RUN ./gradlew :server:shadowJar --no-daemon
 

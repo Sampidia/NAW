@@ -17,14 +17,14 @@ dependencies {
     implementation("javax.mail:javax.mail-api:1.6.2")
     implementation("com.sun.mail:javax.mail:1.6.2")
 
-    implementation("io.ktor:ktor-server-core-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-netty-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-websockets-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-auth-jwt-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:2.3.7")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-cors-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-call-logging-jvm:2.3.7")
+    implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-websockets-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-auth-jwt-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-cors-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-call-logging-jvm:$ktor_version")
 
     // PostgreSQL and Exposed dependencies
     implementation("org.postgresql:postgresql:42.5.4")
@@ -38,10 +38,10 @@ dependencies {
     implementation("at.favre.lib:bcrypt:0.10.2")
 
     // Logging
-    implementation("ch.qos.logback:logback-classic:1.2.12")
+    implementation("ch.qos.logback:logback-classic:$logback_version")
 
     // Testing
-    testImplementation("io.ktor:ktor-server-tests-jvm:2.3.7")
+    testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
 
