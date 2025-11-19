@@ -24,7 +24,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation-jvm:2.3.7")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:2.3.7")
     implementation("io.ktor:ktor-server-cors-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-call-logging-jvm:2.3.7")
+    implementation("io.ktor:ktor-server-call-logging-jvm:2.3.7") // This line is crucial
 
     // MongoDB dependencies
     implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.0")

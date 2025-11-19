@@ -1,38 +1,27 @@
 package com.naijaayo.worldwide
 
 import io.ktor.server.application.*
+import io.ktor.server.plugins.callloging.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-// All other imports are commented out for this diagnostic build
-// import io.ktor.server.websocket.*
-// import io.ktor.websocket.*
-// import kotlinx.coroutines.channels.consumeEach
-// import kotlinx.serialization.json.Json
-// import io.ktor.server.auth.*
-// import io.ktor.server.auth.jwt.*
-// import io.ktor.server.request.*
-// import io.ktor.serialization.kotlinx.json.*
-// import java.util.concurrent.ConcurrentHashMap
-// import kotlinx.serialization.Serializable
-// import com.auth0.jwt.JWT
+import org.slf4j.event.Level
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.module() {
-    println("Starting diagnostic module...")
+    println("Starting diagnostic module with CALL LOGGING...")
 
-    // All services and plugins are disabled for this test.
-    // val mongoService = MongoService()
-    // val authService = MongoAuthService(mongoService)
+    // Install Call Logging to see every incoming request
+    install(CallLogging) {
+        level = Level.INFO
+        filter { call -> call.request.path().startsWith("/") }
+    }
 
-    // install(io.ktor.server.plugins.cors.routing.CORS) { ... }
-    // install(Authentication) { ... }
-    // install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) { ... }
-    // install(WebSockets)
+    // All other services remain disabled for this test.
 
-    // Only the diagnostic routing is active.
     configureDiagnosticRouting()
 }
 
@@ -41,14 +30,16 @@ fun Application.configureDiagnosticRouting() {
         // Health check endpoint - THIS IS THE ONLY ACTIVE ROUTE
         get("/") {
             val message = "Diagnostic Test Server is running!"
-            println(message) // Log to confirm the route is hit
+            // This log will only appear if the request is successfully routed to this handler
+            println("GET / route was successfully hit.") 
             call.respondText(message, ContentType.Text.Plain, HttpStatusCode.OK)
         }
     }
 }
 
 /*
+// The original full routing is still disabled.
 fun Application.configureRouting(authService: MongoAuthService, mongoService: MongoService) {
-    // ALL ORIGINAL ROUTING IS DISABLED
+    // ...
 }
 */
