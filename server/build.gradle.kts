@@ -49,6 +49,10 @@ kotlin {
     jvmToolchain(17)
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions.freeCompilerArgs += "-Xskip-metadata-version-check"
+}
+
 application {
     mainClass.set("com.naijaayo.worldwide.ApplicationKt")
 }
