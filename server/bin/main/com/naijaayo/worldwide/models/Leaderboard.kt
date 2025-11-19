@@ -3,7 +3,7 @@ package com.naijaayo.worldwide.models
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.timestamp
 
-class Leaderboard : Table() {
+object Leaderboard : Table() {
     val id = varchar("id", 255)
     val userId = varchar("user_id", 255).references(Users.id)
     val username = varchar("username", 255)
