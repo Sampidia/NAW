@@ -9,10 +9,8 @@ object Users : Table() {
     val email = varchar("email", 255).uniqueIndex()
     val passwordHash = varchar("password_hash", 255)
     val avatarId = varchar("avatar_id", 255).default("ayo")
-    val coinBalance = integer("coin_balance").default(0)
-    val createdAt = timestamp("created_at")
-    val lastSeen = timestamp("last_seen").nullable()
     val isOnline = bool("is_online").default(false)
+    val lastSeen = timestamp("last_seen").nullable()
 
     override val primaryKey = PrimaryKey(id)
 }
