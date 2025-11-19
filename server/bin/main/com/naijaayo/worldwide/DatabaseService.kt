@@ -47,17 +47,13 @@ class DatabaseService {
             it[Users.username] = username
             it[Users.email] = email
             it[Users.passwordHash] = passwordHash
-            // lastSeen is nullable and will be null by default
         }
     }
 
     suspend fun updateUserLastSeen(id: String) = dbQuery {
         Users.update({ Users.id eq id }) {
-            it[lastSeen] = LocalDateTime.now()
-            it[isOnline] = true
+            it[Users.lastSeen] = LocalDateTime.now()
+            it[Users.isOnline] = true
         }
     }
-
-    // The remaining service methods for friends, messages, etc., will be added in future steps
-    // after we confirm the application builds and runs successfully.
 }
