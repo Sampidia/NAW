@@ -69,7 +69,43 @@ class AuthService(private val dbService: DatabaseService) {
 
             dbService.createUser(userId, username, email, passwordHash)
 
-            // In a real application, you would also create the initial leaderboard entries here.
+            // Create initial leaderboard entries for single player and multiplayer
+            val currentTime = java.time.LocalDateTime.now()
+            dbService.createLeaderboardEntry(
+                LeaderboardEntry(
+                    id = generateId(),
+                    userId = userId,
+                    username = username,
+                    avatarId = "ayo",
+                    gameMode = "single_player",
+                    eloRating = 1200,
+                    gamesPlayed = 0,
+                    gamesWon = 0,
+                    gamesLost = 0,
+                    gamesDrawn = 0,
+                    winStreak = 0,
+                    bestWinStreak = 0,
+                    lastPlayed = currentTime
+                )
+            )
+
+            dbService.createLeaderboardEntry(
+                LeaderboardEntry(
+                    id = generateId(),
+                    userId = userId,
+                    username = username,
+                    avatarId = "ayo",
+                    gameMode = "multiplayer",
+                    eloRating = 1200,
+                    gamesPlayed = 0,
+                    gamesWon = 0,
+                    gamesLost = 0,
+                    gamesDrawn = 0,
+                    winStreak = 0,
+                    bestWinStreak = 0,
+                    lastPlayed = currentTime
+                )
+            )
 
             Result.success(AuthUser(userId, username, email, "ayo"))
         } catch (e: Exception) {

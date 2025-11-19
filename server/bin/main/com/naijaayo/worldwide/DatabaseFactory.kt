@@ -1,9 +1,11 @@
 package com.naijaayo.worldwide
 
+import com.naijaayo.worldwide.models.*
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.net.URI
@@ -19,7 +21,22 @@ object DatabaseFactory {
 
         val dataSource = hikari(dbUrl, username, password)
         Database.connect(dataSource)
-        println("Database connection initialized.")
+
+        // Create tables if they don't exist
+        transaction {
+            SchemaUtils.create(
+                Users,
+                Friends,
+                FriendRequests,
+                Messages,
+                SavedGames,
+                Leaderboard,
+                Rooms,
+                GameResults
+            )
+        }
+
+        println("Database connection initialized and schema created.")
     }
 
     private fun hikari(url: String, user: String, pass: String): HikariDataSource {

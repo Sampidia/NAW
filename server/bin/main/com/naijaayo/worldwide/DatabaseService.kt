@@ -1,13 +1,16 @@
 package com.naijaayo.worldwide
 
-import com.naijaayo.worldwide.models.Users
+import com.naijaayo.worldwide.models.*
 import com.naijaayo.worldwide.DatabaseFactory.dbQuery
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.update
+import java.time.LocalDateTime
 
 class DatabaseService {
 
+    // User operations
     private fun toUser(row: ResultRow): AuthUser = AuthUser(
         id = row[Users.id],
         username = row[Users.username],
@@ -45,8 +48,35 @@ class DatabaseService {
             it[Users.username] = username
             it[Users.email] = email
             it[Users.passwordHash] = passwordHash
+            it[Users.createdAt] = LocalDateTime.now()
         }
     }
 
-    // I will continue to add the other necessary functions in subsequent steps.
+    suspend fun updateUserLastSeen(id: String) = dbQuery {
+        Users.update({ Users.id eq id }) {
+            it[Users.lastSeen] = LocalDateTime.now()
+            it[Users.isOnline] = true
+        }
+    }
+
+    // Leaderboard operations
+    suspend fun createLeaderboardEntry(entry: LeaderboardEntry) = dbQuery {
+        Leaderboard.insert {
+            it[Leaderboard.id] = entry.id
+            it[Leaderboard.userId] = entry.userId
+            it[Leaderboard.username] = entry.username
+            it[Leaderboard.avatarId] = entry.avatarId
+            it[Leaderboard.gameMode] = entry.gameMode
+            it[Leaderboard.eloRating] = entry.eloRating
+            it[Leaderboard.gamesPlayed] = entry.gamesPlayed
+            it[Leaderboard.gamesWon] = entry.gamesWon
+            it[Leaderboard.gamesLost] = entry.gamesLost
+            it[Leaderboard.gamesDrawn] = entry.gamesDrawn
+            it[Leaderboard.winStreak] = entry.winStreak
+            it[Leaderboard.bestWinStreak] = entry.bestWinStreak
+            it[Leaderboard.lastPlayed] = entry.lastPlayed
+        }
+    }
+
+    // TODO: Add remaining CRUD operations for friends, messages, saved games, rooms, game results
 }
