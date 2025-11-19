@@ -9,8 +9,8 @@ plugins {
 group = "com.naijaayo"
 version = "0.0.1"
 
-val ktorVersion = project.property("ktor_version") as String
-val logbackVersion = project.property("logback_version") as String
+val ktorVersion = project.rootProject.property("ktor_version") as String
+val logbackVersion = project.rootProject.property("logback_version") as String
 
 dependencies {
     // Common module dependency
