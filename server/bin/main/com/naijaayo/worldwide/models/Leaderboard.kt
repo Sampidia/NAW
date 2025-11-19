@@ -22,7 +22,7 @@ object Leaderboard : Table {
 }
 
 // Data class for server-side leaderboard operations (matches table structure)
-data class LeaderboardEntry(
+data class LeaderboardRecord(
     val id: String,
     val userId: String,
     val username: String,

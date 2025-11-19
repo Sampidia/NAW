@@ -12,7 +12,7 @@ class AuthService(private val dbService: DatabaseService) {
     private val jwtSecret = System.getenv("JWT_SECRET") ?: "your-secret-key-change-in-production"
     private val jwtIssuer = "naija-ayo-worldwide"
     private val jwtAudience = "naija-ayo-users"
-    private val algorithm = Algorithm.HMAC256(jwtSecret)
+    val algorithm = Algorithm.HMAC256(jwtSecret)
 
     private suspend fun hashPassword(password: String): String {
         return BCrypt.withDefaults().hashToString(12, password.toCharArray())
@@ -72,7 +72,7 @@ class AuthService(private val dbService: DatabaseService) {
             // Create initial leaderboard entries for single player and multiplayer
             val currentTime = java.time.LocalDateTime.now()
             dbService.createLeaderboardEntry(
-                LeaderboardEntry(
+                LeaderboardRecord(
                     id = generateId(),
                     userId = userId,
                     username = username,
@@ -90,7 +90,7 @@ class AuthService(private val dbService: DatabaseService) {
             )
 
             dbService.createLeaderboardEntry(
-                LeaderboardEntry(
+                LeaderboardRecord(
                     id = generateId(),
                     userId = userId,
                     username = username,

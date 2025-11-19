@@ -60,7 +60,7 @@ class DatabaseService {
     }
 
     // Leaderboard operations
-    suspend fun createLeaderboardEntry(entry: LeaderboardEntry) = dbQuery {
+    suspend fun createLeaderboardEntry(entry: LeaderboardRecord) = dbQuery {
         Leaderboard.insert {
             it[Leaderboard.id] = entry.id
             it[Leaderboard.userId] = entry.userId
