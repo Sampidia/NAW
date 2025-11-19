@@ -9,9 +9,6 @@ plugins {
 group = "com.naijaayo"
 version = "0.0.1"
 
-const val ktorVersion = "2.3.10"
-const val logbackVersion = "1.2.11"
-
 dependencies {
     // Common module dependency
     implementation(project(":common"))
@@ -20,14 +17,14 @@ dependencies {
     implementation("javax.mail:javax.mail-api:1.6.2")
     implementation("com.sun.mail:javax.mail:1.6.2")
 
-    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth-jwt-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-cors-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-call-logging-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-core-jvm:2.3.10")
+    implementation("io.ktor:ktor-server-netty-jvm:2.3.10")
+    implementation("io.ktor:ktor-server-websockets-jvm:2.3.10")
+    implementation("io.ktor:ktor-server-auth-jwt-jvm:2.3.10")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:2.3.10")
+    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:2.3.10")
+    implementation("io.ktor:ktor-server-cors-jvm:2.3.10")
+    implementation("io.ktor:ktor-server-call-logging-jvm:2.3.10")
 
     // PostgreSQL and Exposed dependencies
     implementation("org.postgresql:postgresql:42.5.4")
@@ -41,10 +38,10 @@ dependencies {
     implementation("at.favre.lib:bcrypt:0.10.2")
 
     // Logging
-    implementation("ch.qos.logback:logback-classic:$logbackVersion")
+    implementation("ch.qos.logback:logback-classic:1.2.11")
 
     // Testing
-    testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
+    testImplementation("io.ktor:ktor-server-tests-jvm:2.3.10")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
 
