@@ -16,8 +16,9 @@ object DatabaseFactory {
     fun init() {
         val dbUri = URI(System.getenv("DATABASE_URL"))
 
-        val username = dbUri.userInfo.split(":")[0]
-        val password = dbUri.userInfo.split(":")[1]
+        val userInfo = dbUri.userInfo.split(":")
+        val username = userInfo[0]
+        val password = userInfo[1]
         val dbUrl = "jdbc:postgresql://" + dbUri.host + ':' + dbUri.port + dbUri.path + "?sslmode=require"
 
         val dataSource = hikari(dbUrl, username, password)
@@ -41,19 +42,18 @@ object DatabaseFactory {
     }
 
     private fun hikari(url: String, user: String, pass: String): HikariDataSource {
-        val config = HikariConfig().apply {
-            jdbcUrl = url
-            username = user
-            password = pass
-            driverClassName = "org.postgresql.Driver"
-            maximumPoolSize = 10
-            isAutoCommit = false
-            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
-            validate()
-        }
+        val config = HikariConfig()
+        config.jdbcUrl = url
+        config.username = user
+        config.password = pass
+        config.driverClassName = "org.postgresql.Driver"
+        config.maximumPoolSize = 10
+        config.isAutoCommit = false
+        config.transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+        config.validate()
         return HikariDataSource(config)
     }
 
     suspend fun <T> dbQuery(block: suspend Transaction.() -> T): T =
-        newSuspendedTransaction(Dispatchers.IO, block = block)
+        newSuspendedTransaction(Dispatchers.IO, block)
 }

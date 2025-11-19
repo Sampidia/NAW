@@ -19,26 +19,26 @@ class DatabaseService {
 
     suspend fun getUserById(id: String): AuthUser? = dbQuery {
         Users.select { Users.id eq id }
-            .map(::toUser)
+            .map { toUser(it) }
             .singleOrNull()
     }
 
     suspend fun getUserByUsername(username: String): AuthUser? = dbQuery {
         Users.select { Users.username eq username }
-            .map(::toUser)
+            .map { toUser(it) }
             .singleOrNull()
     }
 
     suspend fun getUserByEmail(email: String): AuthUser? = dbQuery {
         Users.select { Users.email eq email }
-            .map(::toUser)
+            .map { toUser(it) }
             .singleOrNull()
     }
 
     suspend fun getPasswordHash(userId: String): String? = dbQuery {
         Users.select { Users.id eq userId }
-            .map { it[Users.passwordHash] }
             .singleOrNull()
+            ?.get(Users.passwordHash)
     }
 
     suspend fun createUser(id: String, username: String, email: String, passwordHash: String) = dbQuery {
