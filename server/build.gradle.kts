@@ -17,21 +17,21 @@ dependencies {
     implementation("javax.mail:javax.mail-api:1.6.2")
     implementation("com.sun.mail:javax.mail:1.6.2")
 
-    implementation("io.ktor:ktor-server-core-jvm:2.3.10")
-    implementation("io.ktor:ktor-server-netty-jvm:2.3.10")
-    implementation("io.ktor:ktor-server-websockets-jvm:2.3.10")
-    implementation("io.ktor:ktor-server-auth-jwt-jvm:2.3.10")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:2.3.10")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:2.3.10")
-    implementation("io.ktor:ktor-server-cors-jvm:2.3.10")
-    implementation("io.ktor:ktor-server-call-logging-jvm:2.3.10")
+    implementation("io.ktor:ktor-server-core-jvm:2.1.3")
+    implementation("io.ktor:ktor-server-netty-jvm:2.1.3")
+    implementation("io.ktor:ktor-server-websockets-jvm:2.1.3")
+    implementation("io.ktor:ktor-server-auth-jwt-jvm:2.1.3")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:2.1.3")
+    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:2.1.3")
+    implementation("io.ktor:ktor-server-cors-jvm:2.1.3")
+    implementation("io.ktor:ktor-server-call-logging-jvm:2.1.3")
 
     // PostgreSQL and Exposed dependencies
     implementation("org.postgresql:postgresql:42.5.4")
-    implementation("org.jetbrains.exposed:exposed-core:0.48.0")
-    implementation("org.jetbrains.exposed:exposed-dao:0.48.0")
-    implementation("org.jetbrains.exposed:exposed-jdbc:0.48.0")
-    implementation("org.jetbrains.exposed:exposed-java-time:0.48.0") // For Java 8+ datetime support
+    implementation("org.jetbrains.exposed:exposed-core:0.36.2")
+    implementation("org.jetbrains.exposed:exposed-dao:0.36.2")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.36.2")
+    implementation("org.jetbrains.exposed:exposed-java-time:0.36.2") // For Java 8+ datetime support
     implementation("com.zaxxer:HikariCP:5.0.1") // High-performance JDBC connection pool
 
     // Password hashing
@@ -41,7 +41,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.11")
 
     // Testing
-    testImplementation("io.ktor:ktor-server-tests-jvm:2.3.10")
+    testImplementation("io.ktor:ktor-server-tests-jvm:2.1.3")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
 
