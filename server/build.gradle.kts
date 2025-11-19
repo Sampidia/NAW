@@ -24,12 +24,14 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation-jvm:2.3.7")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:2.3.7")
     implementation("io.ktor:ktor-server-cors-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-call-logging-jvm:2.3.7") // This line is crucial
+    implementation("io.ktor:ktor-server-call-logging-jvm:2.3.7")
 
-    // MongoDB dependencies
-    implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.0")
-    implementation("org.mongodb:mongodb-driver-core:4.11.0")
-    implementation("org.mongodb:bson:4.11.0")
+    // PostgreSQL and Exposed dependencies
+    implementation("org.postgresql:postgresql:42.5.4")
+    implementation("org.jetbrains.exposed:exposed-core:0.41.1")
+    implementation("org.jetbrains.exposed:exposed-dao:0.41.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.41.1")
+    implementation("com.zaxxer:HikariCP:5.0.1") // High-performance JDBC connection pool
 
     // Password hashing
     implementation("at.favre.lib:bcrypt:0.10.2")

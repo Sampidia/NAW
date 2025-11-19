@@ -1,0 +1,15 @@
+package com.naijaayo.worldwide.models
+
+import org.jetbrains.exposed.sql.Table
+
+object Users : Table() {
+    val id = varchar("id", 255)
+    val username = varchar("username", 255).uniqueIndex()
+    val email = varchar("email", 255).uniqueIndex()
+    val passwordHash = varchar("password_hash", 255)
+    val avatarId = varchar("avatar_id", 255).default("ayo")
+    val isOnline = bool("is_online").default(false)
+    val lastSeen = varchar("last_seen", 255).nullable()
+
+    override val primaryKey = PrimaryKey(id)
+}
