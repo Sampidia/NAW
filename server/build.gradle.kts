@@ -27,11 +27,10 @@ dependencies {
     implementation("io.ktor:ktor-server-call-logging-jvm:2.1.3")
 
     // PostgreSQL and Exposed dependencies
-    implementation("org.postgresql:postgresql:42.5.4")
-    implementation("org.jetbrains.exposed:exposed-core:0.36.2")
-    implementation("org.jetbrains.exposed:exposed-dao:0.36.2")
-    implementation("org.jetbrains.exposed:exposed-jdbc:0.36.2")
-    implementation("org.jetbrains.exposed:exposed-java-time:0.36.2") // For Java 8+ datetime support
+    implementation("org.postgresql:postgresql:42.7.3")
+    implementation("org.jetbrains.exposed:exposed-core:0.41.1")
+    implementation("org.jetbrains.exposed:exposed-dao:0.41.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.41.1")
     implementation("com.zaxxer:HikariCP:5.0.1") // High-performance JDBC connection pool
 
     // Password hashing
