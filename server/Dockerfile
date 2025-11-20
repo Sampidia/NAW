@@ -1,5 +1,5 @@
 # Build stage
-FROM eclipse-temurin:21-jdk-focal as builder
+FROM eclipse-temurin:21-jdk as builder
 
 WORKDIR /app
 
@@ -23,7 +23,7 @@ RUN rm -rf ~/.kotlin/sessions || true
 RUN ./gradlew :server:shadowJar --no-daemon
 
 # Runtime stage
-FROM eclipse-temurin:21-jre-focal
+FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
