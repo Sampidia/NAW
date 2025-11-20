@@ -5,7 +5,7 @@ import com.naijaayo.worldwide.DatabaseFactory.dbQuery
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 
 class DatabaseService {
@@ -51,9 +51,12 @@ class DatabaseService {
     }
 
     suspend fun updateUserLastSeen(id: String) = dbQuery {
-        Users.update(where = { Users.id eq id }) {
-            it.set(Users.lastSeen, LocalDateTime.now())
-            it.set(Users.isOnline, true)
+        transaction {
+            exec("UPDATE users SET last_seen = ?, is_online = ? WHERE id = ?") {
+                java.sql.Timestamp.valueOf(LocalDateTime.now())
+                true
+                id
+            }
         }
     }
 }

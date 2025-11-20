@@ -1,6 +1,13 @@
 package com.naijaayo.worldwide
 
-import com.naijaayo.worldwide.models.*
+import com.naijaayo.worldwide.models.Friends
+import com.naijaayo.worldwide.models.FriendRequests
+import com.naijaayo.worldwide.models.Messages
+import com.naijaayo.worldwide.models.SavedGames
+import com.naijaayo.worldwide.models.Leaderboard
+import com.naijaayo.worldwide.models.Rooms
+import com.naijaayo.worldwide.models.GameResults
+import com.naijaayo.worldwide.models.Users
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.Dispatchers
