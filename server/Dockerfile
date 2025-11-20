@@ -20,7 +20,7 @@ COPY common/src common/src/
 RUN rm -rf ~/.kotlin/sessions || true
 
 # Build the application
-RUN ./gradlew :server:shadowJar --no-daemon --stacktrace
+RUN ./gradlew :server:shadowJar --no-daemon
 
 # Runtime stage
 FROM eclipse-temurin:21-jre
