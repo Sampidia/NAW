@@ -8,7 +8,7 @@ object Messages : Table() {
     val fromUserId = varchar("from_user_id", 255).references(Users.id)
     val toUserId = varchar("to_user_id", 255).references(Users.id)
     val content = text("content")
-    val timestamp = timestamp("timestamp")
+    val sentAt = timestamp("timestamp")
 
     override val primaryKey = PrimaryKey(id)
 }

@@ -59,12 +59,12 @@ fun Application.configureRouting(authService: AuthService) {
         }
 
         post("/register") {
-            val user = call.receive<AuthRequest>()
+            val user = call.receive<ServerAuthRequest>()
             val result = authService.registerUser(user.username, user.email, user.password)
             result.fold(
                 onSuccess = { authUser ->
                     val token = authService.generateToken(authUser)
-                    call.respond(HttpStatusCode.Created, AuthResponse(token))
+                    call.respond(HttpStatusCode.Created, ServerAuthResponse(token))
                 },
                 onFailure = { error ->
                     call.respond(HttpStatusCode.BadRequest, mapOf("error" to error.message))
@@ -73,12 +73,12 @@ fun Application.configureRouting(authService: AuthService) {
         }
 
         post("/login") {
-            val user = call.receive<AuthRequest>()
+            val user = call.receive<ServerAuthRequest>()
             val result = authService.loginUser(user.email, user.password)
             result.fold(
                 onSuccess = { authUser ->
                     val token = authService.generateToken(authUser)
-                    call.respond(HttpStatusCode.OK, AuthResponse(token))
+                    call.respond(HttpStatusCode.OK, ServerAuthResponse(token))
                 },
                 onFailure = { error ->
                     call.respond(HttpStatusCode.Unauthorized, mapOf("error" to error.message))
@@ -89,7 +89,7 @@ fun Application.configureRouting(authService: AuthService) {
 }
 
 @Serializable
-data class AuthRequest(val username: String = "", val email: String, val password: String)
+data class ServerAuthRequest(val username: String = "", val email: String, val password: String)
 
 @Serializable
-data class AuthResponse(val token: String)
+data class ServerAuthResponse(val token: String)

@@ -9,7 +9,7 @@ object GameResults : Table() {
     val player2Id = varchar("player2_id", 255).references(Users.id)
     val winnerId = varchar("winner_id", 255).references(Users.id).nullable()
     val score = varchar("score", 50)
-    val timestamp = timestamp("timestamp")
+    val gameTimestamp = timestamp("timestamp")
 
     override val primaryKey = PrimaryKey(id)
 }

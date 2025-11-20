@@ -52,8 +52,8 @@ class DatabaseService {
 
     suspend fun updateUserLastSeen(id: String) = dbQuery {
         Users.update(where = { Users.id eq id }) {
-            it[Users.lastSeen] = LocalDateTime.now()
-            it[Users.isOnline] = true
+            it.set(Users.lastSeen, LocalDateTime.now())
+            it.set(Users.isOnline, true)
         }
     }
 }
