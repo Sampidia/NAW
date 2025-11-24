@@ -1,22 +1,22 @@
 {
   "project_info": {
-    "project_number": "391817053430",
-    "firebase_url": "https://naija-ayo-worldwide-default-rtdb.firebaseio.com",
-    "project_id": "naija-ayo-worldwide",
-    "storage_bucket": "naija-ayo-worldwide.firebasestorage.app"
+    "project_number": "xxxxx",
+    "firebase_url": "xxxxx",
+    "project_id": "xxx",
+    "storage_bucket": "xxx"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:391817053430:android:ec9fa1d528d05285ab98d7",
+        "mobilesdk_app_id": "xxxx",
         "android_client_info": {
-          "package_name": "com.naijaayo.worldwide"
+          "package_name": "xxx"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCbTJC1H-4DYoEO3nc4Y7k05mk4vGhWAIA"
+          "current_key": "xxxxx"
         }
       ],
       "services": {
