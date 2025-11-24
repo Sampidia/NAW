@@ -6,43 +6,42 @@ import android.os.Bundle
 import android.os.Handler
 import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.lifecycleScope
 import com.naijaayo.worldwide.leaderboard.LeaderboardActivity
-import com.naijaayo.worldwide.theme.NigerianThemeManager
+import com.naijaayo.worldwide.network.FirebaseManager
+import com.naijaayo.worldwide.network.Player
 import com.naijaayo.worldwide.sound.BackgroundMusicManager
+import com.naijaayo.worldwide.theme.NigerianThemeManager
+import kotlinx.coroutines.launch
+import com.naijaayo.worldwide.FriendsActivity
+import com.naijaayo.worldwide.GameRoomActivity
 
 class MainMenuActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize theme manager and apply current theme
         NigerianThemeManager.initialize(this)
         NigerianThemeManager.applyThemeToActivity(this)
 
-        // Initialize session manager
-        com.naijaayo.worldwide.auth.SessionManager.initialize(this)
-
-        // Hide action bar to show only the logo image
         supportActionBar?.hide()
 
         setContentView(R.layout.activity_main_menu)
 
-        // Initialize and start background music
-        android.util.Log.d("MainMenuActivity", "🎵 Initializing BackgroundMusicManager...")
-        BackgroundMusicManager.initialize(this)
-        android.util.Log.d("MainMenuActivity", "🎵 Calling startBackgroundMusic()...")
-        Handler().postDelayed({
-            BackgroundMusicManager.startBackgroundMusic()
-            android.util.Log.d("MainMenuActivity", "🎵 Background music initialization completed")
-        }, 1000) // Delay 1 second to ensure UI is fully loaded
+        Handler().postDelayed({ BackgroundMusicManager.startBackgroundMusic() }, 1000)
 
         findViewById<Button>(R.id.singlePlayerButton).setOnClickListener {
-            // Check for saved single player games first
-            showResumeGameDialog("single_player")
+            // TODO: Re-implement single player logic if needed
+            startActivity(Intent(this, LevelSelectionActivity::class.java))
         }
 
         findViewById<Button>(R.id.multiplayerButton).setOnClickListener {
-            // Check for saved multiplayer games first
-            showResumeGameDialog("multiplayer")
+             if (FirebaseManager.auth.currentUser == null) {
+                Toast.makeText(this, "Please log in to play multiplayer.", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this, ProfileActivity::class.java))
+                return@setOnClickListener
+            }
+            showMultiplayerOptionsDialog()
         }
 
         findViewById<Button>(R.id.settingsButton).setOnClickListener {
@@ -54,72 +53,84 @@ class MainMenuActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.friendsButton).setOnClickListener {
-            // Check authentication before opening friends
-            if (!com.naijaayo.worldwide.auth.SessionManager.isLoggedIn()) {
-                val authDialog = com.naijaayo.worldwide.auth.AuthDialog(this) { userId, username, avatarId ->
-                    startActivity(Intent(this, FriendsActivity::class.java))
-                }
-                authDialog.show()
+             if (FirebaseManager.auth.currentUser == null) {
+                Toast.makeText(this, "Please log in to see friends.", Toast.LENGTH_SHORT).show()
+                 startActivity(Intent(this, ProfileActivity::class.java))
             } else {
                 startActivity(Intent(this, FriendsActivity::class.java))
             }
         }
     }
 
+    private fun showMultiplayerOptionsDialog() {
+        val options = arrayOf("Play Now", "Play with Friends")
+
+        AlertDialog.Builder(this)
+            .setTitle("Multiplayer Mode")
+            .setItems(options) { dialog, which ->
+                when (which) {
+                    0 -> startGameNow() // "Play Now"
+                    1 -> startActivity(Intent(this, GameRoomActivity::class.java)) // "Play with Friends"
+                }
+            }
+            .show()
+    }
+
+    private fun startGameNow() {
+        lifecycleScope.launch {
+            // Show a "searching" dialog
+            val searchingDialog = AlertDialog.Builder(this@MainMenuActivity)
+                .setTitle("Searching for Opponent...")
+                .setCancelable(false)
+                .setNegativeButton("Cancel") { dialog, _ ->
+                    FirebaseManager.auth.currentUser?.uid?.let { FirebaseManager.cancelMatchmaking(it) }
+                    dialog.dismiss()
+                }
+                .create()
+            searchingDialog.show()
+
+            // 1. Join the general game session to be counted in the 98 users
+            val sessionJoined = FirebaseManager.joinGameSession()
+            if (!sessionJoined) {
+                searchingDialog.dismiss()
+                Toast.makeText(this@MainMenuActivity, "Servers are full, please try again later.", Toast.LENGTH_LONG).show()
+                return@launch
+            }
+
+            val currentUser = FirebaseManager.auth.currentUser!!
+            // You should fetch the real profile data here
+            val player = Player(uid = currentUser.uid, displayName = currentUser.displayName ?: "Player", avatarId = "ayo")
+
+            // 2. Listen for a match
+            val matchListener = FirebaseManager.listenForGameMatch(currentUser.uid) { gameId ->
+                searchingDialog.dismiss()
+                // Match found! Navigate to the game screen
+                val intent = Intent(this@MainMenuActivity, MainActivity::class.java).apply {
+                    putExtra("GAME_ID", gameId)
+                }
+                startActivity(intent)
+                // Make sure to remove the listener once the match is found
+                FirebaseManager.removeListener(FirebaseManager.listenForGameMatch(currentUser.uid){})
+            }
+            
+            // 3. Enter the matchmaking pool
+            FirebaseManager.findMatch(player)
+
+            // Clean up listener if the user cancels
+            searchingDialog.setOnDismissListener {
+                 FirebaseManager.removeListener(matchListener)
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
-        // Reapply theme when activity becomes visible (e.g., after returning from theme settings)
         NigerianThemeManager.applyThemeToActivity(this)
-        // Resume background music
         BackgroundMusicManager.resumeBackgroundMusic()
     }
 
     override fun onPause() {
         super.onPause()
-        // Pause background music when activity is not visible
         BackgroundMusicManager.pauseBackgroundMusic()
-    }
-    private fun showResumeGameDialog(gameMode: String) {
-        // Check if user is authenticated
-        if (!com.naijaayo.worldwide.auth.SessionManager.isLoggedIn()) {
-            // Show authentication dialog
-            val authDialog = com.naijaayo.worldwide.auth.AuthDialog(this) { userId, username, avatarId ->
-                // After successful authentication, retry showing resume dialog
-                showResumeGameDialog(gameMode)
-            }
-            authDialog.show()
-            return
-        }
-
-        // TODO: Fetch saved games from server
-        // For now, show empty dialog or "no saved games" message
-        val savedGames = emptyList<SavedGame>() // TODO: Replace with actual API call
-
-        val resumeDialog = ResumeGameDialog(
-            context = this,
-            savedGames = savedGames,
-            onGameSelected = { savedGame ->
-                // TODO: Load selected game and navigate to MainActivity
-                Toast.makeText(this, "Loading saved game...", Toast.LENGTH_SHORT).show()
-                // Navigate to game with loaded state
-                val intent = Intent(this, MainActivity::class.java).apply {
-                    putExtra("isSinglePlayer", gameMode == "single_player")
-                    // TODO: Pass saved game data
-                }
-                startActivity(intent)
-            },
-            onStartNewGame = {
-                // Start new game based on mode
-                if (gameMode == "single_player") {
-                    // Launch level selection
-                    val intent = Intent(this, LevelSelectionActivity::class.java)
-                    startActivity(intent)
-                } else {
-                    // Go to multiplayer lobby
-                    startActivity(Intent(this, MultiplayerLobbyActivity::class.java))
-                }
-            }
-        )
-        resumeDialog.show()
     }
 }

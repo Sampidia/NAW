@@ -2,6 +2,7 @@ package com.naijaayo.worldwide.theme
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.naijaayo.worldwide.R
 
 object AvatarPreferenceManager {
 
@@ -28,5 +29,23 @@ object AvatarPreferenceManager {
 
     fun loadAvatarPreference(): String? {
         return sharedPreferences.getString(KEY_USER_AVATAR, "ayo")
+    }
+
+    fun getAvatarPortrait(avatarId: String): Int {
+        return when (avatarId) {
+            "ayo" -> R.drawable.char_ayo_portrait
+            "ada" -> R.drawable.char_ada_portrait
+            "fatima" -> R.drawable.char_fatima_portrait
+            else -> R.mipmap.ic_launcher_foreground
+        }
+    }
+
+    fun getAvatarFullBody(avatarId: String): Int {
+        return when (avatarId) {
+            "ayo" -> R.drawable.char_ayo_full
+            "ada" -> R.drawable.char_ada_full
+            "fatima" -> R.drawable.char_fatima_full
+            else -> R.mipmap.ic_launcher_foreground
+        }
     }
 }

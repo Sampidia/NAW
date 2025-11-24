@@ -1,19 +1,11 @@
 {
     "logs": [
         {
-            "outputFile": "com.naijaayo.worldwide.app-mergeDebugResources-38:/values-v26/values-v26.xml",
+            "outputFile": "com.naijaayo.worldwide.app-mergeDebugResources-50:/values-v26/values-v26.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\SAM\\.gradle\\caches\\8.13\\transforms\\a6698e51c6cb01dc64188c4d6a1250dd\\transformed\\appcompat-1.4.1\\res\\values-v26\\values-v26.xml",
+                    "source": "C:\\Users\\SAM\\.gradle\\caches\\8.13\\transforms\\430e99ded83e06574b5044523e0c713f\\transformed\\appcompat-1.6.1\\res\\values-v26\\values-v26.xml",
                     "from": {
-                        "startLines": "2,3,4,8,12,16",
-                        "startColumns": "4,4,4,4,4,4",
-                        "startOffsets": "55,130,217,431,657,896",
-                        "endLines": "2,3,7,11,15,16",
-                        "endColumns": "74,86,12,12,12,92",
-                        "endOffsets": "125,212,426,652,891,984"
-                    },
-                    "to": {
                         "startLines": "2,3,4,8,12,16",
                         "startColumns": "4,4,4,4,4,4",
                         "startOffsets": "55,130,217,381,557,796",

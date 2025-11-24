@@ -4,18 +4,13 @@ import android.app.Dialog
 import android.content.Context
 import android.view.LayoutInflater
 import android.widget.Toast
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Dispatchers
-import com.naijaayo.worldwide.network.toUser
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayout
 import com.naijaayo.worldwide.R
-import com.naijaayo.worldwide.network.RetrofitClient
-import com.naijaayo.worldwide.network.RegisterRequest
-import com.naijaayo.worldwide.network.LoginRequest
+import com.naijaayo.worldwide.network.FirebaseManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-// import com.naijaayo.worldwide.databinding.DialogAuthBinding
 import kotlinx.coroutines.launch
 
 class AuthDialog(
@@ -23,7 +18,6 @@ class AuthDialog(
     private val onAuthSuccess: (String, String, String) -> Unit // userId, username, avatarId
 ) : Dialog(context) {
 
-    // private lateinit var binding: DialogAuthBinding
     private var isSignUpMode = true
 
     init {
@@ -31,8 +25,6 @@ class AuthDialog(
     }
 
     private fun setupDialog() {
-        // binding = DialogAuthBinding.inflate(LayoutInflater.from(context))
-        // setContentView(binding.root)
         val view = LayoutInflater.from(context).inflate(R.layout.dialog_auth, null)
         setContentView(view)
 
@@ -115,21 +107,14 @@ class AuthDialog(
             password.length < 6 -> showError("Password must be at least 6 characters")
             !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> showError("Invalid email format")
             else -> {
-                GlobalScope.launch(Dispatchers.Main) {
-                    try {
-                        val response = RetrofitClient.instance.register(RegisterRequest(username, email, password))
-                        val user = response.user.toUser()
-                        SessionManager.saveUserSession(user, response.token)
-                        onAuthSuccess(user.id, user.username, user.avatarId)
+                (context as androidx.appcompat.app.AppCompatActivity).lifecycleScope.launch {
+                    val success = FirebaseManager.registerUser(email, password, username)
+                    if (success) {
+                        val user = FirebaseManager.auth.currentUser!!
+                        onAuthSuccess(user.uid, username, "ayo") // Assume default avatar
                         dismiss()
-                    } catch (e: Exception) {
-                        val errorMessage = when (e) {
-                            is retrofit2.HttpException -> {
-                                e.response()?.errorBody()?.string() ?: "Registration failed"
-                            }
-                            else -> "Network error: ${e.message}"
-                        }
-                        showError(errorMessage)
+                    } else {
+                        showError("Registration failed")
                     }
                 }
             }
@@ -146,28 +131,22 @@ class AuthDialog(
             password.isEmpty() -> showError("Password is required")
             !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> showError("Invalid email format")
             else -> {
-                GlobalScope.launch(Dispatchers.Main) {
-                    try {
-                        val response = RetrofitClient.instance.login(LoginRequest(email, password))
-                        val user = response.user.toUser()
-                        SessionManager.saveUserSession(user, response.token)
-                        onAuthSuccess(user.id, user.username, user.avatarId)
+                (context as androidx.appcompat.app.AppCompatActivity).lifecycleScope.launch {
+                    val success = FirebaseManager.loginUser(email, password)
+                    if (success) {
+                        val user = FirebaseManager.auth.currentUser!!
+                        val userProfile = FirebaseManager.getUserProfile(user.uid)
+                        val username = userProfile?.get("displayName") as? String ?: "Player"
+                        val avatarId = userProfile?.get("avatarId") as? String ?: "ayo"
+                        onAuthSuccess(user.uid, username, avatarId)
                         dismiss()
-                    } catch (e: Exception) {
-                        val errorMessage = when (e) {
-                            is retrofit2.HttpException -> {
-                                e.response()?.errorBody()?.string() ?: "Login failed"
-                            }
-                            else -> "Network error: ${e.message}"
-                        }
-                        showError(errorMessage)
+                    } else {
+                        showError("Login failed")
                     }
                 }
             }
         }
     }
-
-
 
     private fun showError(message: String) {
         val errorTextView = findViewById<TextView>(R.id.errorTextView)

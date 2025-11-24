@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.naijaayo.worldwide.app-mergeDebugResources-38:/values-xlarge-v4/values-xlarge-v4.xml",
+            "outputFile": "com.naijaayo.worldwide.app-mergeDebugResources-50:/values-xlarge-v4/values-xlarge-v4.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\SAM\\.gradle\\caches\\8.13\\transforms\\a6698e51c6cb01dc64188c4d6a1250dd\\transformed\\appcompat-1.4.1\\res\\values-xlarge-v4\\values-xlarge-v4.xml",
+                    "source": "C:\\Users\\SAM\\.gradle\\caches\\8.13\\transforms\\430e99ded83e06574b5044523e0c713f\\transformed\\appcompat-1.6.1\\res\\values-xlarge-v4\\values-xlarge-v4.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7",
                         "startColumns": "4,4,4,4,4,4",

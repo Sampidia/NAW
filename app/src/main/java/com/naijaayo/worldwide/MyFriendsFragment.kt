@@ -9,6 +9,10 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.naijaayo.worldwide.auth.SessionManager
+import com.naijaayo.worldwide.model.Friend
+import com.naijaayo.worldwide.ChatDialog
+import com.naijaayo.worldwide.FriendsViewModel
 
 class MyFriendsFragment : Fragment() {
 
@@ -51,7 +55,7 @@ class MyFriendsFragment : Fragment() {
     }
 
     private fun loadFriends() {
-        val currentUser = com.naijaayo.worldwide.auth.SessionManager.getCurrentUser()
+        val currentUser = SessionManager.getCurrentUser()
         currentUser?.let {
             friendsViewModel.loadFriends(it.id)
         }

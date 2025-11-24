@@ -4,16 +4,17 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.naijaayo.worldwide.R
-import com.naijaayo.worldwide.game.GameViewModel
+import com.naijaayo.worldwide.network.FirebaseManager
+import kotlinx.coroutines.launch
 
 class SinglePlayerLeaderboardFragment : Fragment() {
 
-    private val gameViewModel: GameViewModel by activityViewModels()
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: LeaderboardAdapter
 
@@ -31,13 +32,18 @@ class SinglePlayerLeaderboardFragment : Fragment() {
         recyclerView = view.findViewById(R.id.leaderboardRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(context)
 
-        // Observe leaderboard data
-        gameViewModel.leaderboard.observe(viewLifecycleOwner) { users ->
-            adapter = LeaderboardAdapter(users, isSinglePlayer = true)
-            recyclerView.adapter = adapter
-        }
+        fetchLeaderboard()
+    }
 
-        // Fetch leaderboard data
-        gameViewModel.fetchLeaderboard()
+    private fun fetchLeaderboard() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val leaderboardEntries = FirebaseManager.getSinglePlayerLeaderboard()
+            if (leaderboardEntries.isNotEmpty()) {
+                adapter = LeaderboardAdapter(leaderboardEntries)
+                recyclerView.adapter = adapter
+            } else {
+                Toast.makeText(context, "Single-player leaderboard is empty.", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

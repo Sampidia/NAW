@@ -1,180 +1,266 @@
 package com.naijaayo.worldwide
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.activity.viewModels
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
-import com.naijaayo.worldwide.game.GameViewModel
-import com.naijaayo.worldwide.theme.NigerianThemeManager
+import com.google.firebase.database.ValueEventListener
+import com.naijaayo.worldwide.network.FirebaseManager
+import com.naijaayo.worldwide.network.Game
+import com.naijaayo.worldwide.theme.AvatarPreferenceManager
 
 class WaitingRoomActivity : AppCompatActivity() {
 
-    private val gameViewModel: GameViewModel by viewModels()
-
+    private lateinit var backButton: ImageButton
+    private lateinit var closeButton: ImageButton
+    private lateinit var roomCodeDisplay: TextView
+    private lateinit var playerCountText: TextView
     private lateinit var player1Avatar: ImageView
-    private lateinit var player2Avatar: ImageView
     private lateinit var player1Name: TextView
+    private lateinit var removePlayer1Button: ImageButton
+    private lateinit var player2Avatar: ImageView
     private lateinit var player2Name: TextView
-    private lateinit var roomTitleTextView: TextView
-    private lateinit var difficultyTextView: TextView
-    private lateinit var startGameButton: Button
-    private lateinit var backToLobbyButton: Button
+    private lateinit var removePlayer2Button: ImageButton
+    private lateinit var addPlayerButton: Button
+    private lateinit var infoBannerText: TextView
+    private lateinit var letsPlayButton: Button
 
-    private var currentRoom: Room? = null
-    private var currentUserId = "user1" // TODO: Get from user session
-    private var currentUsername = "Player 1" // TODO: Get from user session
-    private var currentAvatarId = com.naijaayo.worldwide.theme.AvatarPreferenceManager.getUserAvatar() // Get from user preferences
+    private var roomId: String? = null
+    private var roomCode: String? = null
+    private var gameListener: ValueEventListener? = null
+    private var currentGame: Game? = null
+    private var currentUserId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Initialize theme manager and apply current theme
-        NigerianThemeManager.initialize(this)
-        NigerianThemeManager.applyThemeToActivity(this)
-
-        // Initialize avatar preference manager
-        com.naijaayo.worldwide.theme.AvatarPreferenceManager.initialize(this)
-
-        // Hide action bar and status bar for immersive experience
         supportActionBar?.hide()
-        window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_FULLSCREEN or android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-        window.setFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN, android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN)
-
         setContentView(R.layout.activity_waiting_room)
 
-        // Get room data from intent
-        val roomId = intent.getStringExtra("roomId")
-        val hostUsername = intent.getStringExtra("hostUsername")
-        val difficultyString = intent.getStringExtra("difficulty")
-        val isHost = intent.getBooleanExtra("isHost", false)
+        roomId = intent.getStringExtra("ROOM_ID")
+        roomCode = intent.getStringExtra("ROOM_CODE")
+        currentUserId = FirebaseManager.auth.currentUser?.uid
 
-        if (roomId != null && hostUsername != null && difficultyString != null) {
-            // Create room object from intent data
-            val difficulty = when (difficultyString) {
-                "EASY" -> GameLevel.EASY
-                "MEDIUM" -> GameLevel.MEDIUM
-                "HARD" -> GameLevel.HARD
-                else -> GameLevel.MEDIUM
-            }
-
-            currentRoom = Room(
-                roomId = roomId,
-                hostUid = currentUserId,
-                hostUsername = hostUsername,
-                hostAvatarId = currentAvatarId,
-                difficulty = difficulty,
-                type = "public"
-            )
+        if (roomId == null || currentUserId == null) {
+            finish()
+            return
         }
 
         initializeViews()
-        setupRoomInfo()
-        setupNavigation()
-        observeRoomState()
-    }
-
-    private fun initializeViews() {
-        player1Avatar = findViewById(R.id.player1Avatar)
-        player2Avatar = findViewById(R.id.player2Avatar)
-        player1Name = findViewById(R.id.player1Name)
-        player2Name = findViewById(R.id.player2Name)
-        roomTitleTextView = findViewById(R.id.roomTitleTextView)
-        difficultyTextView = findViewById(R.id.difficultyTextView)
-        startGameButton = findViewById(R.id.startGameButton)
-        backToLobbyButton = findViewById(R.id.backToLobbyButton)
-    }
-
-    private fun setupRoomInfo() {
-        currentRoom?.let { room ->
-            roomTitleTextView.text = "Room: ${room.roomId}"
-
-            val difficultyText = when (room.difficulty) {
-                GameLevel.EASY -> "Easy"
-                GameLevel.MEDIUM -> "Medium"
-                GameLevel.HARD -> "Hard"
-            }
-            difficultyTextView.text = "Difficulty: $difficultyText"
-
-            // Set player 1 (host/current user) info
-            player1Name.text = room.hostUsername
-            val player1AvatarRes = getAvatarResource(room.hostAvatarId)
-            player1Avatar.setImageResource(player1AvatarRes)
-
-            // Update player count and enable/disable start button
-            updatePlayerStatus(room)
-        }
-    }
-
-    private fun updatePlayerStatus(room: Room) {
-        when {
-            room.players.size >= 2 -> {
-                // Room is full, show both players
-                player2Name.text = "Opponent" // TODO: Get actual opponent name
-                startGameButton.isEnabled = room.players.contains(currentUserId)
-                startGameButton.alpha = if (startGameButton.isEnabled) 1.0f else 0.5f
-            }
-            room.players.size == 1 -> {
-                // Waiting for opponent
-                player2Name.text = "Waiting for opponent..."
-                startGameButton.isEnabled = false
-                startGameButton.alpha = 0.5f
-            }
-            else -> {
-                // Empty room (shouldn't happen)
-                player2Name.text = "Waiting for players..."
-                startGameButton.isEnabled = false
-                startGameButton.alpha = 0.5f
-            }
-        }
-    }
-
-    private fun setupNavigation() {
-        startGameButton.setOnClickListener {
-            currentRoom?.let { room ->
-                // Navigate to game with room data (pass minimal data to avoid serialization issues)
-                val intent = Intent(this, MainActivity::class.java).apply {
-                    putExtra("isSinglePlayer", false)
-                    putExtra("roomId", room.roomId)
-                    putExtra("difficulty", room.difficulty.name)
-                }
-                startActivity(intent)
-                finish()
-            }
-        }
-
-        backToLobbyButton.setOnClickListener {
-            // Navigate back to lobby
-            val intent = Intent(this, MultiplayerLobbyActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-            startActivity(intent)
-            finish()
-        }
-    }
-
-    private fun observeRoomState() {
-        // TODO: Observe room updates from server via ViewModel
-        // For now, we'll rely on the initial room data
-    }
-
-    private fun getAvatarResource(avatarId: String): Int {
-        return when (avatarId) {
-            "ayo" -> R.drawable.char_ayo_portrait
-            "ada" -> R.drawable.char_ada_portrait
-            "fatima" -> R.drawable.char_fatima_portrait
-            "ai" -> R.drawable.char_ai_portrait
-            else -> R.drawable.char_ayo_portrait // Default fallback
-        }
+        setupListeners()
+        displayRoomCode()
     }
 
     override fun onResume() {
         super.onResume()
-        // Reapply theme when activity becomes visible
-        NigerianThemeManager.applyThemeToActivity(this)
-        // Resume background music
-        com.naijaayo.worldwide.sound.BackgroundMusicManager.resumeBackgroundMusic()
+        listenForGameUpdates()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        gameListener?.let { FirebaseManager.removeListener(it) }
+    }
+
+    private fun initializeViews() {
+        backButton = findViewById(R.id.backButton)
+        closeButton = findViewById(R.id.closeButton)
+        roomCodeDisplay = findViewById(R.id.roomCodeDisplay)
+        playerCountText = findViewById(R.id.playerCountText)
+        player1Avatar = findViewById(R.id.player1Avatar)
+        player1Name = findViewById(R.id.player1Name)
+        removePlayer1Button = findViewById(R.id.removePlayer1Button)
+        player2Avatar = findViewById(R.id.player2Avatar)
+        player2Name = findViewById(R.id.player2Name)
+        removePlayer2Button = findViewById(R.id.removePlayer2Button)
+        addPlayerButton = findViewById(R.id.addPlayerButton)
+        infoBannerText = findViewById(R.id.infoBannerText)
+        letsPlayButton = findViewById(R.id.letsPlayButton)
+    }
+
+    private fun setupListeners() {
+        backButton.setOnClickListener { finish() }
+        closeButton.setOnClickListener { finish() }
+
+        addPlayerButton.setOnClickListener {
+            showAddPlayerDialog()
+        }
+
+        removePlayer1Button.setOnClickListener {
+            // Only creator can remove players
+            removePlayer(0)
+        }
+
+        removePlayer2Button.setOnClickListener {
+            removePlayer(1)
+        }
+
+        letsPlayButton.setOnClickListener {
+            startGame()
+        }
+    }
+
+    private fun displayRoomCode() {
+        roomCodeDisplay.text = roomCode ?: "N/A"
+    }
+
+    private fun listenForGameUpdates() {
+        roomId?.let { id ->
+            gameListener = FirebaseManager.listenForGameStateUpdates(id) { game ->
+                currentGame = game
+                updateUI(game)
+            }
+        }
+    }
+
+    private fun updateUI(game: Game) {
+        val players = game.players.values.toList()
+        val playerCount = players.size
+
+        // Update player count
+        playerCountText.text = "$playerCount/2 players"
+
+        // Update Player 1
+        if (players.isNotEmpty()) {
+            val p1 = players[0]
+            player1Avatar.setImageResource(AvatarPreferenceManager.getAvatarPortrait(p1.avatarId ?: "ayo"))
+            player1Name.text = p1.displayName
+            player1Avatar.visibility = View.VISIBLE
+            player1Name.visibility = View.VISIBLE
+            
+            // Show remove button only if current user is creator and this is not the creator
+            removePlayer1Button.visibility = if (currentUserId == game.creatorUid && p1.uid != game.creatorUid) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+        }
+
+        // Update Player 2
+        if (players.size > 1) {
+            val p2 = players[1]
+            player2Avatar.setImageResource(AvatarPreferenceManager.getAvatarPortrait(p2.avatarId ?: "ayo"))
+            player2Name.text = p2.displayName
+            player2Avatar.visibility = View.VISIBLE
+            player2Name.visibility = View.VISIBLE
+            
+            // Show remove button only if current user is creator
+            removePlayer2Button.visibility = if (currentUserId == game.creatorUid) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+
+            // Hide add player button when full
+            addPlayerButton.visibility = View.GONE
+
+            // Enable Let's Play button
+            letsPlayButton.isEnabled = true
+            letsPlayButton.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                resources.getColor(android.R.color.holo_green_dark, theme)
+            )
+            infoBannerText.text = "Ready to play!"
+        } else {
+            // Show add player button
+            addPlayerButton.visibility = View.VISIBLE
+            
+            // Hide player 2 slot
+            player2Avatar.visibility = View.GONE
+            player2Name.visibility = View.GONE
+            removePlayer2Button.visibility = View.GONE
+
+            // Disable Let's Play button
+            letsPlayButton.isEnabled = false
+            letsPlayButton.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                resources.getColor(android.R.color.darker_gray, theme)
+            )
+            infoBannerText.text = "Waiting for player."
+        }
+    }
+
+    private fun showAddPlayerDialog() {
+        val options = arrayOf("Search by Username", "Invite Friends", "Share Room Code")
+        
+        AlertDialog.Builder(this)
+            .setTitle("Add Player")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showSearchUsernameDialog()
+                    1 -> showInviteFriendsDialog()
+                    2 -> shareRoomCode()
+                }
+            }
+            .show()
+    }
+
+    private fun showSearchUsernameDialog() {
+        val input = android.widget.EditText(this)
+        input.hint = "Enter username"
+        
+        AlertDialog.Builder(this)
+            .setTitle("Search Player")
+            .setView(input)
+            .setPositiveButton("Search") { _, _ ->
+                val username = input.text.toString().trim()
+                if (username.isNotEmpty()) {
+                    searchAndAddPlayer(username)
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun searchAndAddPlayer(username: String) {
+        // TODO: Implement search by username in FirebaseManager
+        Toast.makeText(this, "Searching for $username...", Toast.LENGTH_SHORT).show()
+        // For now, show placeholder message
+        Toast.makeText(this, "Feature coming soon!", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showInviteFriendsDialog() {
+        // TODO: Implement friends list with online status
+        Toast.makeText(this, "Friends list coming soon!", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun shareRoomCode() {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("Room Code", roomCode)
+        clipboard.setPrimaryClip(clip)
+        
+        Toast.makeText(this, "Room code copied: $roomCode", Toast.LENGTH_LONG).show()
+    }
+
+    private fun removePlayer(playerIndex: Int) {
+        val players = currentGame?.players?.values?.toList()
+        if (players != null && playerIndex < players.size) {
+            val playerToRemove = players[playerIndex]
+            
+            // Only creator can remove players
+            if (currentUserId == currentGame?.creatorUid) {
+                roomId?.let { id ->
+                    // TODO: Implement removePlayerFromRoom in FirebaseManager
+                    Toast.makeText(this, "Removing ${playerToRemove.displayName}...", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun startGame() {
+        if (currentGame != null && currentGame!!.players.size == 2) {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("GAME_ID", roomId)
+            intent.putExtra("IS_MULTIPLAYER", true)
+            startActivity(intent)
+            finish()
+        } else {
+            Toast.makeText(this, "Waiting for opponent...", Toast.LENGTH_SHORT).show()
+        }
     }
 }
