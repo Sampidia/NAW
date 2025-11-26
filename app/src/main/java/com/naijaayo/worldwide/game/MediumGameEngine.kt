@@ -1,6 +1,6 @@
 package com.naijaayo.worldwide.game
 
-import com.naijaayo.worldwide.GameState
+import com.naijaayo.worldwide.LocalGameState
 import kotlin.random.Random
 
 /**
@@ -11,7 +11,7 @@ class MediumGameEngine {
     /**
      * Makes a move for the specified player
      */
-    fun makeMove(gameState: GameState, pitIndex: Int, player: Int): GameState? {
+    fun makeMove(gameState: LocalGameState, pitIndex: Int, player: Int): LocalGameState? {
         if (!isValidMove(gameState, pitIndex, player)) return null
 
         val newState = gameState.copy(pits = gameState.pits.copyOf())
@@ -21,7 +21,7 @@ class MediumGameEngine {
     /**
      * Makes a move with detailed intermediate steps for animation
      */
-    fun makeAnimatedMove(gameState: GameState, pitIndex: Int, player: Int): MoveResult? {
+    fun makeAnimatedMove(gameState: LocalGameState, pitIndex: Int, player: Int): MoveResult? {
         if (!isValidMove(gameState, pitIndex, player)) return null
 
         val sowingSteps = calculateSowingSteps(gameState.pits, pitIndex)
@@ -39,7 +39,7 @@ class MediumGameEngine {
         return MoveResult(sowingSteps, finalState, captureResult)
     }
 
-    private fun executeMove(gameState: GameState, pitIndex: Int, player: Int): GameState {
+    private fun executeMove(gameState: LocalGameState, pitIndex: Int, player: Int): LocalGameState {
         val pits = gameState.pits
         val originalPits = pits.copyOf()
         val seeds = pits[pitIndex]
@@ -62,7 +62,7 @@ class MediumGameEngine {
         val player1Score = gameState.player1Score + if (player == 1) capturedSeeds else 0
         val player2Score = gameState.player2Score + if (player == 2) capturedSeeds else 0
 
-        return checkGameEnd(GameState(
+        return checkGameEnd(LocalGameState(
             pits = captureResult.pits,
             player1Score = player1Score,
             player2Score = player2Score,
@@ -133,7 +133,7 @@ class MediumGameEngine {
         return steps
     }
 
-    private fun isValidMove(gameState: GameState, pitIndex: Int, player: Int): Boolean {
+    private fun isValidMove(gameState: LocalGameState, pitIndex: Int, player: Int): Boolean {
         if (gameState.gameOver) return false
         if (gameState.currentPlayer != player) return false
 
@@ -150,7 +150,7 @@ class MediumGameEngine {
         return if (player == 1) pitIndex in 6..11 else pitIndex in 0..5
     }
 
-    private fun checkGameEnd(gameState: GameState): GameState {
+    private fun checkGameEnd(gameState: LocalGameState): LocalGameState {
         val pits = gameState.pits
         val player1Seeds = (0..5).sumOf { pits[it] }
         val player2Seeds = (6..11).sumOf { pits[it] }
@@ -175,7 +175,7 @@ class MediumGameEngine {
         return gameState
     }
 
-    fun getValidMoves(gameState: GameState): List<Int> {
+    fun getValidMoves(gameState: LocalGameState): List<Int> {
         val validMoves = mutableListOf<Int>()
         val player = gameState.currentPlayer
         val pitsRange = if (player == 1) 0..5 else 6..11
@@ -189,7 +189,7 @@ class MediumGameEngine {
         return validMoves
     }
 
-    fun makeAIMove(gameState: GameState): GameState? {
+    fun makeAIMove(gameState: LocalGameState): LocalGameState? {
         val validMoves = getValidMoves(gameState)
         if (validMoves.isEmpty()) return null
 

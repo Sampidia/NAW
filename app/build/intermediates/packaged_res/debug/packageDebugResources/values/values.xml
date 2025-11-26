@@ -13,9 +13,9 @@
     <string name="app_name">Naija Ayo Worldwide</string>
     <string name="firebase_database_url" translatable="false">https://naija-ayo-worldwide-default-rtdb.firebaseio.com</string>
     <string name="gcm_defaultSenderId" translatable="false">391817053430</string>
-    <string name="google_api_key" translatable="false">AIzaSyCbTJC1H-4DYoEO3nc4Y7k05mk4vGhWAIA</string>
-    <string name="google_app_id" translatable="false">1:391817053430:android:ec9fa1d528d05285ab98d7</string>
-    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyCbTJC1H-4DYoEO3nc4Y7k05mk4vGhWAIA</string>
+    <string name="google_api_key" translatable="false">AIzaSyCcu26leBc63SlqoaVvcOu0Gwc27mGZq8k</string>
+    <string name="google_app_id" translatable="false">1:391817053430:android:03d27478f2050a43ab98d7</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyCcu26leBc63SlqoaVvcOu0Gwc27mGZq8k</string>
     <string name="google_storage_bucket" translatable="false">naija-ayo-worldwide.firebasestorage.app</string>
     <string name="project_id" translatable="false">naija-ayo-worldwide</string>
     <style name="AyoPit">

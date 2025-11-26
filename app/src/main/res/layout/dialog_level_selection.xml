@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <Button
+        android:id="@+id/easyButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Easy"
+        android:textSize="14sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_purple_hover_animated"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/mediumButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Medium"
+        android:textSize="14sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_purple_hover_animated"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/hardButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Hard"
+        android:textSize="14sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_purple_hover_animated"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/rulesButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Rules"
+        android:textSize="14sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_purple_hover_animated" />
+
+</LinearLayout>

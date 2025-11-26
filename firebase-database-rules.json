@@ -1,0 +1,37 @@
+{
+    "rules": {
+        "games": {
+            ".read": "auth != null",
+            ".indexOn": [
+                "roomCode",
+                "status"
+            ],
+            "$gameId": {
+                ".read": "auth != null",
+                ".write": "auth != null && (!data.exists() || data.child('creatorUid').val() === auth.uid || data.child('players').child(auth.uid).exists())",
+                "players": {
+                    "$playerId": {
+                        ".write": "auth != null && ($playerId === auth.uid || !data.exists())"
+                    }
+                },
+                "gameState": {
+                    ".write": "auth != null && root.child('games').child($gameId).child('players').child(auth.uid).exists()"
+                }
+            }
+        },
+        "status": {
+            "online_users": {
+                "$uid": {
+                    ".read": "auth != null",
+                    ".write": "auth != null && $uid === auth.uid"
+                }
+            }
+        },
+        "matchmaking_pool": {
+            "$uid": {
+                ".read": "auth != null",
+                ".write": "auth != null && $uid === auth.uid"
+            }
+        }
+    }
+}

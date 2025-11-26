@@ -1,6 +1,6 @@
 package com.naijaayo.worldwide.game
 
-import com.naijaayo.worldwide.GameState
+import com.naijaayo.worldwide.LocalGameState
 import kotlin.random.Random
 
 /**
@@ -46,7 +46,7 @@ data class SowingStep(
  */
 data class MoveResult(
     val sowingSteps: List<SowingStep>,
-    val finalState: GameState,
+    val finalState: LocalGameState,
     val captureResult: CaptureResult
 )
 
@@ -75,7 +75,7 @@ class LocalGameEngine {
      * @param player Player making the move (1 or 2)
      * @return New game state after the move, or null if move is invalid
      */
-    fun makeMove(gameState: GameState, pitIndex: Int, player: Int): GameState? {
+    fun makeMove(gameState: LocalGameState, pitIndex: Int, player: Int): LocalGameState? {
         return when (gameState.level) {
             com.naijaayo.worldwide.GameLevel.EASY -> easyEngine.makeMove(gameState, pitIndex, player)
             com.naijaayo.worldwide.GameLevel.MEDIUM -> mediumEngine.makeMove(gameState, pitIndex, player)
@@ -91,7 +91,7 @@ class LocalGameEngine {
      * @param level Game level for capture logic
      * @return New game state after the move, or null if move is invalid
      */
-    fun makeMove(gameState: GameState, pitIndex: Int, player: Int, level: com.naijaayo.worldwide.GameLevel): GameState? {
+    fun makeMove(gameState: LocalGameState, pitIndex: Int, player: Int, level: com.naijaayo.worldwide.GameLevel): LocalGameState? {
         // Validate move
         if (!isValidMove(gameState, pitIndex, player)) {
             return null
@@ -114,7 +114,7 @@ class LocalGameEngine {
      * @param player Player making the move (1 or 2)
      * @return MoveResult containing sowing steps and final state, or null if invalid
      */
-    fun makeAnimatedMove(gameState: GameState, pitIndex: Int, player: Int): MoveResult? {
+    fun makeAnimatedMove(gameState: LocalGameState, pitIndex: Int, player: Int): MoveResult? {
         return when (gameState.level) {
             com.naijaayo.worldwide.GameLevel.EASY -> easyEngine.makeAnimatedMove(gameState, pitIndex, player)
             com.naijaayo.worldwide.GameLevel.MEDIUM -> mediumEngine.makeAnimatedMove(gameState, pitIndex, player)
@@ -162,7 +162,7 @@ class LocalGameEngine {
     /**
      * Validates if a move is legal
      */
-    private fun isValidMove(gameState: GameState, pitIndex: Int, player: Int): Boolean {
+    private fun isValidMove(gameState: LocalGameState, pitIndex: Int, player: Int): Boolean {
         // Game must not be over
         if (gameState.gameOver) return false
 
@@ -203,7 +203,7 @@ class LocalGameEngine {
     /**
      * Executes the complete move logic
      */
-    private fun executeMove(gameState: GameState, pitIndex: Int, player: Int): GameState {
+    private fun executeMove(gameState: LocalGameState, pitIndex: Int, player: Int): LocalGameState {
         val pits = gameState.pits
         val originalPits = pits.copyOf() // Store original state for capture detection
         val seeds = pits[pitIndex]
@@ -233,8 +233,8 @@ class LocalGameEngine {
         val player1Score = gameState.player1Score + (if (player == 1) capturedSeeds else 0)
         val player2Score = gameState.player2Score + (if (player == 2) capturedSeeds else 0)
 
-        // Check for game end - create new GameState with capture data
-        val gameEndResult = checkGameEnd(GameState(
+        // Check for game end - create new LocalGameState with capture data
+        val gameEndResult = checkGameEnd(LocalGameState(
             pits = newPits,
             player1Score = player1Score,
             player2Score = player2Score,
@@ -336,7 +336,7 @@ class LocalGameEngine {
     /**
      * Checks if the game should end and determines winner
      */
-    private fun checkGameEnd(gameState: GameState): GameState {
+    private fun checkGameEnd(gameState: LocalGameState): LocalGameState {
         val pits = gameState.pits
 
         // Count seeds on each side
@@ -374,7 +374,7 @@ class LocalGameEngine {
     /**
      * Gets all valid moves for the current player
      */
-    fun getValidMoves(gameState: GameState): List<Int> {
+    fun getValidMoves(gameState: LocalGameState): List<Int> {
         return when (gameState.level) {
             com.naijaayo.worldwide.GameLevel.EASY -> easyEngine.getValidMoves(gameState)
             com.naijaayo.worldwide.GameLevel.MEDIUM -> mediumEngine.getValidMoves(gameState)
@@ -385,7 +385,7 @@ class LocalGameEngine {
     /**
      * Makes a move for AI player using the level from gameState
      */
-    fun makeAIMove(gameState: GameState): GameState? {
+    fun makeAIMove(gameState: LocalGameState): LocalGameState? {
         return when (gameState.level) {
             com.naijaayo.worldwide.GameLevel.EASY -> easyEngine.makeAIMove(gameState)
             com.naijaayo.worldwide.GameLevel.MEDIUM -> mediumEngine.makeAIMove(gameState)
@@ -396,15 +396,17 @@ class LocalGameEngine {
     /**
      * Creates a new game state with specified level
      */
-    fun createNewGame(level: com.naijaayo.worldwide.GameLevel = com.naijaayo.worldwide.GameLevel.MEDIUM): GameState {
-        return GameState(
+    fun createNewGame(level: com.naijaayo.worldwide.GameLevel = com.naijaayo.worldwide.GameLevel.MEDIUM): LocalGameState {
+        android.util.Log.d("LocalGameEngine", "Creating new game with level: $level")
+        return LocalGameState(
             pits = intArrayOf(4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4),
             player1Score = 0,
             player2Score = 0,
             currentPlayer = 1,
             gameOver = false,
             winner = null,
-            level = level
+            level = level,
+            lastCapturedPitIndices = emptyList()
         )
     }
 }

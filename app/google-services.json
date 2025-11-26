@@ -8,7 +8,7 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:391817053430:android:ec9fa1d528d05285ab98d7",
+        "mobilesdk_app_id": "1:391817053430:android:03d27478f2050a43ab98d7",
         "android_client_info": {
           "package_name": "com.naijaayo.worldwide"
         }
@@ -16,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCbTJC1H-4DYoEO3nc4Y7k05mk4vGhWAIA"
+          "current_key": "AIzaSyCcu26leBc63SlqoaVvcOu0Gwc27mGZq8k"
         }
       ],
       "services": {

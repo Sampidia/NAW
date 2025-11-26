@@ -90,6 +90,15 @@
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
+            <TextView
+                android:id="@+id/gameLevelDisplay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Level: Medium"
+                android:textColor="#666666"
+                android:textSize="14sp" />
+
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>

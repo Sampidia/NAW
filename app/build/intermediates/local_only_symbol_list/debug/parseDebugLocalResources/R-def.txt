@@ -135,6 +135,7 @@ id friendNameText
 id friendRequestsRecyclerView
 id friendsButton
 id friendsRecyclerView
+id gameLevelDisplay
 id gameMessage
 id gameMode
 id gameStatusCard
@@ -346,6 +347,7 @@ layout dialog_chat
 layout dialog_create_room
 layout dialog_floating_status
 layout dialog_game_over
+layout dialog_level_selection
 layout dialog_resume_game
 layout fragment_friend_requests
 layout fragment_leaderboard

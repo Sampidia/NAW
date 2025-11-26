@@ -33,7 +33,8 @@ data class Game(
     val players: Map<String, Player> = emptyMap(),
     val status: String = "waiting",
     val gameState: GameState = GameState(),
-    val isPrivate: Boolean = false
+    val isPrivate: Boolean = false,
+    val level: String = "MEDIUM"
 )
 
 object FirebaseManager {
@@ -66,7 +67,7 @@ object FirebaseManager {
     fun cancelMatchmaking(uid: String) { /* ... */ }
 
     // --- "Play with Friends" - Room Management ---
-    suspend fun createPrivateRoom(player: Player, roomCode: String): String {
+    suspend fun createPrivateRoom(player: Player, roomCode: String, level: String = "MEDIUM"): String {
         val roomId = (100000..999999).random().toString() // Generate 6-digit ID
         val game = Game(
             roomId = roomId,
@@ -74,10 +75,29 @@ object FirebaseManager {
             creatorUid = player.uid,
             players = mapOf(player.uid!! to player),
             status = "waiting",
-            isPrivate = true
+            isPrivate = true,
+            level = level
         )
         gamesRef.child(roomId).setValue(game).await()
         return roomId
+    }
+
+    suspend fun startGame(roomId: String) {
+        val roomRef = gamesRef.child(roomId)
+        val snapshot = roomRef.get().await()
+        val game = snapshot.getValue(Game::class.java) ?: return
+        
+        // Initialize game state with first player's turn
+        val firstPlayerUid = game.players.values.firstOrNull()?.uid
+        val initialGameState = GameState(
+            board = List(12) { 4 },
+            nextPlayerUid = firstPlayerUid,
+            winnerUid = null,
+            isGameOver = false
+        )
+        
+        roomRef.child("status").setValue("playing").await()
+        roomRef.child("gameState").setValue(initialGameState).await()
     }
 
     suspend fun joinPrivateRoom(roomId: String, player: Player): Boolean {
@@ -96,6 +116,21 @@ object FirebaseManager {
             false
         }
     }
+
+    suspend fun findRoomByCode(roomCode: String): String? {
+        return try {
+            val snapshot = gamesRef.orderByChild("roomCode").equalTo(roomCode).get().await()
+            if (snapshot.exists()) {
+                snapshot.children.firstOrNull()?.key
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error finding room by code", e)
+            null
+        }
+    }
+
 
     fun listenForPublicRooms(onRoomsUpdated: (rooms: List<Game>) -> Unit): ValueEventListener {
         val listener = object : ValueEventListener {
@@ -130,7 +165,79 @@ object FirebaseManager {
         return listener
     }
 
-    suspend fun makeMove(roomId: String, pitIndex: Int) { /* ... */ }
+    suspend fun makeMove(roomId: String, pitIndex: Int) {
+        try {
+            val roomRef = gamesRef.child(roomId)
+            val snapshot = roomRef.get().await()
+            val game = snapshot.getValue(Game::class.java) ?: return
+            
+            // Get current user
+            val currentUid = auth.currentUser?.uid ?: return
+            
+            // Verify it's the player's turn
+            if (game.gameState.nextPlayerUid != currentUid) {
+                android.util.Log.w("FirebaseManager", "Not player's turn")
+                return
+            }
+            
+            // Convert Firebase GameState to Local GameState
+            val level = when (game.level) {
+                "EASY" -> com.naijaayo.worldwide.GameLevel.EASY
+                "HARD" -> com.naijaayo.worldwide.GameLevel.HARD
+                else -> com.naijaayo.worldwide.GameLevel.MEDIUM
+            }
+            
+            // Determine player number (1 or 2)
+            val playersList = game.players.values.toList()
+            val playerNumber = if (playersList.getOrNull(0)?.uid == currentUid) 1 else 2
+            
+            val localGameState = com.naijaayo.worldwide.LocalGameState(
+                pits = game.gameState.board.toIntArray(),
+                player1Score = 0, // Scores tracked separately in multiplayer
+                player2Score = 0,
+                currentPlayer = playerNumber,
+                gameOver = game.gameState.isGameOver,
+                level = level
+            )
+            
+            // Use LocalGameEngine to calculate the move
+            val gameEngine = com.naijaayo.worldwide.game.LocalGameEngine()
+            val newLocalState = gameEngine.makeMove(localGameState, pitIndex, playerNumber)
+            
+            if (newLocalState == null) {
+                android.util.Log.w("FirebaseManager", "Invalid move")
+                return
+            }
+            
+            // Determine next player
+            val nextPlayerUid = if (newLocalState.currentPlayer == 1) {
+                playersList.getOrNull(0)?.uid
+            } else {
+                playersList.getOrNull(1)?.uid
+            }
+            
+            // Convert back to Firebase GameState
+            val newFirebaseState = GameState(
+                board = newLocalState.pits.toList(),
+                nextPlayerUid = nextPlayerUid,
+                winnerUid = if (newLocalState.gameOver) {
+                    when (newLocalState.winner) {
+                        1 -> playersList.getOrNull(0)?.uid
+                        2 -> playersList.getOrNull(1)?.uid
+                        else -> null
+                    }
+                } else null,
+                isGameOver = newLocalState.gameOver
+            )
+            
+            // Update Firebase
+            roomRef.child("gameState").setValue(newFirebaseState).await()
+            android.util.Log.d("FirebaseManager", "Move completed successfully")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error making move", e)
+        }
+    }
     fun removeListener(listener: ValueEventListener, ref: DatabaseReference? = null) { (ref ?: gamesRef).removeEventListener(listener) }
 
     // --- New, Specific Leaderboard Logic ---
@@ -214,26 +321,48 @@ object FirebaseManager {
     }
 
     suspend fun loginUser(input: String, password: String): Boolean {
+        android.util.Log.d("FirebaseManager", "=== LOGIN ATTEMPT START ===")
+        android.util.Log.d("FirebaseManager", "Input: $input")
         return try {
             var email = input
             if (!android.util.Patterns.EMAIL_ADDRESS.matcher(input).matches()) {
                 // Input is likely a username, look up the email
+                android.util.Log.d("FirebaseManager", "Input is NOT an email, treating as username")
+                android.util.Log.d("FirebaseManager", "Querying Firestore for username: $input")
+                
                 val querySnapshot = firestore.collection("users")
                     .whereEqualTo("username", input)
                     .limit(1)
                     .get()
                     .await()
                 
+                android.util.Log.d("FirebaseManager", "Query completed. isEmpty: ${querySnapshot.isEmpty}")
+                android.util.Log.d("FirebaseManager", "Query size: ${querySnapshot.size()}")
+                
                 if (!querySnapshot.isEmpty) {
-                    email = querySnapshot.documents[0].getString("email") ?: return false
+                    email = querySnapshot.documents[0].getString("email") ?: ""
+                    android.util.Log.d("FirebaseManager", "Found email for username: $email")
+                    
+                    if (email.isEmpty()) {
+                        android.util.Log.e("FirebaseManager", "Email field is empty in user document")
+                        return false
+                    }
                 } else {
+                    android.util.Log.e("FirebaseManager", "Username not found in Firestore: $input")
+                    android.util.Log.e("FirebaseManager", "Make sure the user was registered with this username")
                     return false // Username not found
                 }
+            } else {
+                android.util.Log.d("FirebaseManager", "Input is an email address")
             }
             
+            android.util.Log.d("FirebaseManager", "Attempting Firebase Auth login with email: $email")
             auth.signInWithEmailAndPassword(email, password).await()
+            android.util.Log.d("FirebaseManager", "Login successful!")
             true
         } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Login failed with exception: ${e.javaClass.simpleName}")
+            android.util.Log.e("FirebaseManager", "Error message: ${e.message}")
             e.printStackTrace()
             false
         }

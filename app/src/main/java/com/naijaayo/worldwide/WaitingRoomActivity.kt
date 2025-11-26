@@ -13,7 +13,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.launch
 import com.naijaayo.worldwide.network.FirebaseManager
 import com.naijaayo.worldwide.network.Game
 import com.naijaayo.worldwide.theme.AvatarPreferenceManager
@@ -33,6 +35,7 @@ class WaitingRoomActivity : AppCompatActivity() {
     private lateinit var addPlayerButton: Button
     private lateinit var infoBannerText: TextView
     private lateinit var letsPlayButton: Button
+    private lateinit var gameLevelDisplay: TextView
 
     private var roomId: String? = null
     private var roomCode: String? = null
@@ -83,6 +86,7 @@ class WaitingRoomActivity : AppCompatActivity() {
         addPlayerButton = findViewById(R.id.addPlayerButton)
         infoBannerText = findViewById(R.id.infoBannerText)
         letsPlayButton = findViewById(R.id.letsPlayButton)
+        gameLevelDisplay = findViewById(R.id.gameLevelDisplay)
     }
 
     private fun setupListeners() {
@@ -103,7 +107,7 @@ class WaitingRoomActivity : AppCompatActivity() {
         }
 
         letsPlayButton.setOnClickListener {
-            startGame()
+            onStartGameClicked()
         }
     }
 
@@ -116,6 +120,9 @@ class WaitingRoomActivity : AppCompatActivity() {
             gameListener = FirebaseManager.listenForGameStateUpdates(id) { game ->
                 currentGame = game
                 updateUI(game)
+                if (game.status == "playing") {
+                    navigateToGame()
+                }
             }
         }
     }
@@ -183,6 +190,15 @@ class WaitingRoomActivity : AppCompatActivity() {
             )
             infoBannerText.text = "Waiting for player."
         }
+
+        // Update game level display
+        val levelText = when (game.level) {
+            "EASY" -> "Level: Easy"
+            "MEDIUM" -> "Level: Medium"
+            "HARD" -> "Level: Hard"
+            else -> "Level: Medium"
+        }
+        gameLevelDisplay.text = levelText
     }
 
     private fun showAddPlayerDialog() {
@@ -252,15 +268,21 @@ class WaitingRoomActivity : AppCompatActivity() {
         }
     }
 
-    private fun startGame() {
+    private fun onStartGameClicked() {
         if (currentGame != null && currentGame!!.players.size == 2) {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.putExtra("GAME_ID", roomId)
-            intent.putExtra("IS_MULTIPLAYER", true)
-            startActivity(intent)
-            finish()
+            lifecycleScope.launch {
+                roomId?.let { FirebaseManager.startGame(it) }
+            }
         } else {
             Toast.makeText(this, "Waiting for opponent...", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun navigateToGame() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.putExtra("GAME_ID", roomId)
+        intent.putExtra("IS_MULTIPLAYER", true)
+        startActivity(intent)
+        finish()
     }
 }

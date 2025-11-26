@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.naijaayo.worldwide.GameState
+import com.naijaayo.worldwide.LocalGameState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
@@ -18,8 +18,8 @@ class SinglePlayerGameViewModel : ViewModel() {
 
     private val gameEngine = LocalGameEngine()
 
-    private val _gameState = MutableLiveData<GameState>()
-    val gameState: LiveData<GameState> = _gameState
+    private val _gameState = MutableLiveData<LocalGameState>()
+    val gameState: LiveData<LocalGameState> = _gameState
 
     private val _isProcessingMove = MutableLiveData<Boolean>()
     val isProcessingMove: LiveData<Boolean> = _isProcessingMove
@@ -171,7 +171,7 @@ class SinglePlayerGameViewModel : ViewModel() {
     /**
      * Shows appropriate game over message
      */
-    private fun showGameOverMessage(gameState: GameState) {
+    private fun showGameOverMessage(gameState: LocalGameState) {
         val message = when (gameState.winner) {
             1 -> "🎉 You win! Final score: ${gameState.player1Score} - ${gameState.player2Score}"
             2 -> "🤖 AI wins! Final score: ${gameState.player1Score} - ${gameState.player2Score}"
@@ -215,7 +215,7 @@ class SinglePlayerGameViewModel : ViewModel() {
     /**
      * Called when a game is completed to update leaderboard
      */
-    fun onGameCompleted(gameState: GameState) {
+    fun onGameCompleted(gameState: LocalGameState) {
         // For single-player, we can trigger leaderboard refresh here
         // The actual leaderboard update logic would be in the GameViewModel
         // For now, we'll just log the completion
@@ -225,7 +225,7 @@ class SinglePlayerGameViewModel : ViewModel() {
     /**
      * Updates the game state (for direct state updates from MainActivity)
      */
-    fun updateGameState(gameState: GameState) {
+    fun updateGameState(gameState: LocalGameState) {
         _gameState.value = gameState
     }
 }

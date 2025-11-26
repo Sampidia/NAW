@@ -171,7 +171,7 @@ class ProfileActivity : AppCompatActivity() {
                 if (success) {
                     updateUI()
                 } else {
-                    Toast.makeText(baseContext, "Login failed. Check credentials.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(baseContext, "Invalid login details", Toast.LENGTH_SHORT).show()
                 }
             }
         } else {

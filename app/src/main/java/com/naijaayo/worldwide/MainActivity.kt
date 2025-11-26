@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var soundManager: SoundManager
 
     // --- Previous State for Sound Logic ---
-    private var previousGameState: com.naijaayo.worldwide.GameState? = null
+    private var previousGameState: com.naijaayo.worldwide.LocalGameState? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity() {
 
     // --- UI Update Logic ---
 
-    private fun updateUiForSinglePlayer(state: com.naijaayo.worldwide.GameState) {
+    private fun updateUiForSinglePlayer(state: com.naijaayo.worldwide.LocalGameState) {
         playGameSounds(state)
         previousGameState = state
 
@@ -202,7 +202,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun playGameSounds(newState: com.naijaayo.worldwide.GameState) {
+    private fun playGameSounds(newState: com.naijaayo.worldwide.LocalGameState) {
         val oldState = previousGameState ?: return
 
         // Check for game over
