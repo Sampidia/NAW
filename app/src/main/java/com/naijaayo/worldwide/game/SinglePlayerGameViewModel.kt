@@ -9,6 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.random.Random
 
 /**
  * ViewModel for single-player Ayo game
@@ -27,6 +28,13 @@ class SinglePlayerGameViewModel : ViewModel() {
     private val _gameMessage = MutableLiveData<String>()
     val gameMessage: LiveData<String> = _gameMessage
 
+    // Animation support
+    private val _moveResult = MutableLiveData<MoveResult?>()
+    val moveResult: LiveData<MoveResult?> = _moveResult
+
+    private val _animationComplete = MutableLiveData<Boolean>()
+    val animationComplete: LiveData<Boolean> = _animationComplete
+
     init {
         // Do not start game in init, let MainActivity call startNewGame with level
     }
@@ -40,7 +48,7 @@ class SinglePlayerGameViewModel : ViewModel() {
     }
 
     /**
-     * Makes a move for the human player
+     * Makes a move for the human player with animation support
      */
     fun makePlayerMove(pitIndex: Int) {
         val currentState = _gameState.value ?: return
@@ -59,40 +67,56 @@ class SinglePlayerGameViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                val newState = gameEngine.makeMove(currentState, pitIndex, 1)
+                // Use makeAnimatedMove instead of makeMove for animation support
+                val moveResult = gameEngine.makeAnimatedMove(currentState, pitIndex, 1)
 
-                if (newState != null) {
-                    _gameState.value = newState
-
-                    if (newState.gameOver) {
-                        showGameOverMessage(newState)
-                    } else {
-                        // Show AI message and let it display briefly
-                        _gameMessage.value = "Nice move, Ai thinking.."
-
-                        // Delay to let AI message be visible
-                        delay(1500)
-
-                        // Make AI move with timeout protection (don't change message during AI move)
-                        val aiMoveResult = withTimeoutOrNull(5000) { // 5 second timeout
-                            makeAIMoveInternal()
-                        }
-
-                        if (aiMoveResult == null) {
-                            _gameMessage.value = "AI took too long! Your turn."
-                            // Reset to player's turn
-                            _gameState.value = newState.copy(currentPlayer = 1)
-                        } else {
-                            // AI move completed successfully, show player turn message
-                            _gameMessage.value = "Play Now!"
-                        }
-                    }
+                if (moveResult != null) {
+                    // Expose move result for MainActivity to animate
+                    _moveResult.value = moveResult
+                    // Don't update game state yet - wait for animation to complete
                 } else {
                     _gameMessage.value = "Invalid move! Try another pit."
+                    _isProcessingMove.value = false
                 }
             } catch (e: Exception) {
                 _gameMessage.value = "Error making move: ${e.message}"
-            } finally {
+                _isProcessingMove.value = false
+            }
+        }
+    }
+
+    /**
+     * Called when animation completes to update final state and trigger AI move
+     */
+    fun onAnimationComplete(finalState: LocalGameState) {
+        _gameState.value = finalState
+        _animationComplete.value = true
+
+        if (finalState.gameOver) {
+            showGameOverMessage(finalState)
+            _isProcessingMove.value = false
+        } else {
+            // Show AI message and let it display briefly
+            _gameMessage.value = "Nice move, Ai thinking.."
+
+            viewModelScope.launch {
+                // Delay to let AI message be visible
+                delay(1500)
+
+                // Make AI move with timeout protection
+                val aiMoveResult = withTimeoutOrNull(5000) { // 5 second timeout
+                    makeAIMoveInternal()
+                }
+
+                if (aiMoveResult == null) {
+                    _gameMessage.value = "AI took too long! Your turn."
+                    // Reset to player's turn
+                    _gameState.value = finalState.copy(currentPlayer = 1)
+                } else {
+                    // AI move completed successfully, show player turn message
+                    _gameMessage.value = "Play Now!"
+                }
+                
                 _isProcessingMove.value = false
             }
         }
@@ -156,15 +180,15 @@ class SinglePlayerGameViewModel : ViewModel() {
             return
         }
 
-        val newState = gameEngine.makeAIMove(currentState)
+        // Pick a random move (simple AI)
+        val aiPitIndex = validMoves[Random.nextInt(validMoves.size)]
+        
+        // Use makeAnimatedMove for AI too
+        val moveResult = gameEngine.makeAnimatedMove(currentState, aiPitIndex, 2) // 2 is AI player
 
-        if (newState != null) {
-            _gameState.value = newState
-
-            if (newState.gameOver) {
-                showGameOverMessage(newState)
-            }
-            // Don't change message here - let the calling function handle it
+        if (moveResult != null) {
+            _moveResult.value = moveResult
+            // Don't update game state yet - wait for animation
         }
     }
 

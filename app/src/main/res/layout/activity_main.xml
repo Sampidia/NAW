@@ -108,55 +108,7 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- GAME STATUS POP-OUT (Bottom Left) -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/gameStatusCard"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="80dp"
-        android:elevation="50dp"
-        app:cardBackgroundColor="#F5F5F5"
-        app:cardCornerRadius="12dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:minWidth="200dp">
-
-            <TextView
-                android:id="@+id/currentPlayer"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Your Turn"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#2E7D32"
-                app:layout_constraintBottom_toTopOf="@id/gameMessage"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/gameMessage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Welcome to Ayo!"
-                android:textSize="12sp"
-                android:textColor="#666666"
-                android:gravity="center"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/currentPlayer" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </androidx.cardview.widget.CardView>
+    <!-- Game Status Card moved to bottom for Z-order -->
 
     <!-- GAME BOARD -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -721,5 +673,56 @@
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Floating Status Dialog (Dynamic Position) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/floatingStatusCard"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:elevation="100dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardCornerRadius="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/game_status_background"
+            android:padding="12dp"
+            android:minWidth="200dp">
+
+            <TextView
+                android:id="@+id/currentPlayer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#2E7D32"
+                app:layout_constraintBottom_toTopOf="@id/gameMessage"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/gameMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text=""
+                android:textSize="12sp"
+                android:textColor="#666666"
+                android:gravity="center"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/currentPlayer" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
