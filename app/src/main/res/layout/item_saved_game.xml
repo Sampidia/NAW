@@ -1,73 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/circle_rank_background"
     android:layout_margin="8dp"
-    android:padding="16dp">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="#2A2A2A">
 
-    <ImageView
-        android:id="@+id/opponentAvatar"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginEnd="12dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:src="@drawable/char_ayo_portrait" />
-
-    <TextView
-        android:id="@+id/opponentName"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/white"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/opponentAvatar"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="Opponent Name" />
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
-    <TextView
-        android:id="@+id/gameMode"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:textColor="@android:color/white"
-        android:textSize="12sp"
-        app:layout_constraintStart_toEndOf="@+id/opponentAvatar"
-        app:layout_constraintTop_toBottomOf="@+id/opponentName"
-        tools:text="Single Player • Easy" />
+        <!-- Player 1 Info -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
 
-    <TextView
-        android:id="@+id/saveDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:textColor="@android:color/white"
-        android:textSize="10sp"
-        app:layout_constraintStart_toEndOf="@+id/opponentAvatar"
-        app:layout_constraintTop_toBottomOf="@+id/gameMode"
-        tools:text="Saved: 2 hours ago" />
+            <ImageView
+                android:id="@+id/player1Avatar"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/char_ayo_portrait" />
 
-    <ImageView
-        android:id="@+id/onlineStatus"
-        android:layout_width="12dp"
-        android:layout_height="12dp"
-        android:layout_marginEnd="8dp"
-        android:src="@mipmap/ic_launcher_foreground"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="ContentDescription" />
+            <TextView
+                android:id="@+id/player1Name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Player 1"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:ellipsize="end"
+                android:maxLines="1"/>
+        </LinearLayout>
 
-    <TextView
-        android:id="@+id/onlineStatusText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@android:color/holo_green_light"
-        android:textSize="10sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/onlineStatus"
-        tools:text="Online" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="VS"
+            android:textColor="#FFD700"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginHorizontal="16dp"/>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- Player 2 Info -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/player2Avatar"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/char_ayo_portrait" />
+
+            <TextView
+                android:id="@+id/player2Name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Player 2"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:ellipsize="end"
+                android:maxLines="1"/>
+        </LinearLayout>
+
+        <!-- Resume Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/resumeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Resume"
+            android:textColor="#000000"
+            app:backgroundTint="#FFD700"
+            app:cornerRadius="20dp"
+            android:layout_marginStart="16dp"/>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

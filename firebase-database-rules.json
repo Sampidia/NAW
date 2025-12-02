@@ -19,6 +19,22 @@
                 }
             }
         },
+        "saved_games": {
+            ".read": "auth != null",
+            ".indexOn": [
+                "roomCode"
+            ],
+            "$gameId": {
+                ".read": "auth != null",
+                ".write": "auth != null"
+            }
+        },
+        "users": {
+            "$uid": {
+                ".read": "auth != null",
+                ".write": "auth != null && $uid === auth.uid"
+            }
+        },
         "status": {
             "online_users": {
                 "$uid": {

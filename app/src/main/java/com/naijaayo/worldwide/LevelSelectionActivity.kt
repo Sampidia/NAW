@@ -9,6 +9,8 @@ import android.widget.Button
 import android.widget.Toast
 import com.naijaayo.worldwide.theme.NigerianThemeManager
 import com.naijaayo.worldwide.sound.BackgroundMusicManager
+import com.bumptech.glide.Glide
+import android.widget.ImageView
 
 class LevelSelectionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,6 +24,9 @@ class LevelSelectionActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         setContentView(R.layout.activity_level_selection)
+
+        val appLogo = findViewById<ImageView>(R.id.appLogo)
+        Glide.with(this).load(R.raw.logo_animate).into(appLogo)
 
         // Initialize and start background music
         android.util.Log.d("LevelSelectionActivity", "🎵 Initializing BackgroundMusicManager...")
@@ -63,18 +68,34 @@ class LevelSelectionActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun showRules() {
-        AlertDialog.Builder(this)
-            .setTitle("Game Rules")
-            .setMessage("Naija Ayo is a traditional African board game.\n\n" +
-                "Objective: Capture more seeds than your opponent.\n\n" +
-                "Levels:\n" +
-                "- Easy: Capture 2 or 3 seeds\n" +
-                "- Medium: Capture 3 seeds (standard)\n" +
-                "- Hard: Capture 4 seeds\n\n" +
-                "Sow seeds counterclockwise. Capture opponent pits that match the level's seed count after sowing if a transition occurs.")
-            .setPositiveButton("OK", null)
-            .show()
+        private fun showRules() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_game_rules, null)
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        val rulesContent = dialogView.findViewById<android.widget.TextView>(R.id.rulesContent)
+        val rulesText = "Naija Ayo is a traditional African board game.<br><br>" +
+                "<b>Objective:</b> Capture more seeds than your opponent.<br><br>" +
+                "<b>Levels:</b><br>" +
+                "- Easy: Capture 2 or 3 seeds<br>" +
+                "- Medium: Capture 3 seeds (standard)<br>" +
+                "- Hard: Capture 4 seeds<br><br>" +
+                "Sow seeds counterclockwise. Capture opponent pits that match the level's seed count after sowing if a transition occurs."
+        
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            rulesContent.text = android.text.Html.fromHtml(rulesText, android.text.Html.FROM_HTML_MODE_LEGACY)
+        } else {
+            @Suppress("DEPRECATION")
+            rulesContent.text = android.text.Html.fromHtml(rulesText)
+        }
+
+        dialogView.findViewById<android.widget.Button>(R.id.okButton).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
 
     override fun onResume() {

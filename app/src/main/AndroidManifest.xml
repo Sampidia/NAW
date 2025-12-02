@@ -3,6 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
     <application
         android:allowBackup="true"
@@ -17,6 +22,7 @@
         tools:targetApi="31">
         <activity
             android:name=".MainMenuActivity"
+            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,19 +31,32 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="landscape" />
-        <activity android:name=".LevelSelectionActivity" />
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|smallestScreenSize"
+            android:launchMode="singleTop" />
+        <activity
+            android:name=".LevelSelectionActivity"
+            android:screenOrientation="portrait" />
         <activity android:name=".leaderboard.LeaderboardActivity" />
-        <activity android:name=".ProfileActivity" />
+        <activity
+            android:name=".ProfileActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
         <activity android:name=".friends.FriendsActivity" />
-        <activity android:name=".SettingsActivity" />
+        <activity
+            android:name=".SettingsActivity"
+            android:screenOrientation="portrait" />
         <activity android:name=".SoundSettingsActivity" />
         <activity android:name=".ThemeSettingsActivity" />
         <activity android:name=".BoardSettingsActivity" />
-        <activity android:name=".WaitingRoomActivity" />
-        <activity android:name="com.naijaayo.worldwide.MultiplayerLobbyActivity"
-            android:configChanges="orientation|screenSize" />
-            <activity android:name=".GameRoomActivity" android:screenOrientation="portrait" />
+        <activity
+            android:name=".WaitingRoomActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".ResumeGameActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.NAIJAAYOWORLDWIDE" />
+
+        <activity android:name=".GameRoomActivity" android:screenOrientation="portrait" />
     </application>
 
 </manifest>

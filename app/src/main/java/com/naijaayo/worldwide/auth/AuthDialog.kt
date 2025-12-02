@@ -11,6 +11,8 @@ import com.naijaayo.worldwide.network.FirebaseManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.ImageView
+import com.bumptech.glide.Glide
 import kotlinx.coroutines.launch
 
 class AuthDialog(
@@ -34,8 +36,13 @@ class AuthDialog(
             android.view.WindowManager.LayoutParams.WRAP_CONTENT
         )
 
+        // Load GIF with Glide
+        val logoImageView = findViewById<ImageView>(R.id.logoImageView)
+        Glide.with(context).load(R.raw.logo_animate).into(logoImageView)
+
         setupTabs()
         setupButtons()
+        setupHoverAnimations()
     }
 
     private fun setupTabs() {
@@ -60,17 +67,20 @@ class AuthDialog(
         val authActionButton = findViewById<Button>(R.id.authActionButton)
         val dialogTitle = findViewById<TextView>(R.id.dialogTitle)
         val errorTextView = findViewById<TextView>(R.id.errorTextView)
+        val switchModeTextView = findViewById<TextView>(R.id.switchModeTextView)
 
         if (isSignUpMode) {
             signUpLayout.visibility = android.view.View.VISIBLE
             signInLayout.visibility = android.view.View.GONE
             authActionButton.text = "Sign Up"
             dialogTitle.text = "Sign Up for Multiplayer"
+            switchModeTextView.text = "Already have an account? Sign in"
         } else {
             signUpLayout.visibility = android.view.View.GONE
             signInLayout.visibility = android.view.View.VISIBLE
             authActionButton.text = "Sign In"
             dialogTitle.text = "Sign In to Multiplayer"
+            switchModeTextView.text = "Don't have an account? Sign up"
         }
         errorTextView.visibility = android.view.View.GONE
     }
@@ -78,6 +88,8 @@ class AuthDialog(
     private fun setupButtons() {
         val authActionButton = findViewById<Button>(R.id.authActionButton)
         val cancelButton = findViewById<Button>(R.id.cancelButton)
+        val forgetPasswordTextView = findViewById<TextView>(R.id.forgetPasswordTextView)
+        val switchModeTextView = findViewById<TextView>(R.id.switchModeTextView)
 
         authActionButton.setOnClickListener {
             if (isSignUpMode) {
@@ -89,6 +101,50 @@ class AuthDialog(
 
         cancelButton.setOnClickListener {
             dismiss()
+        }
+
+        forgetPasswordTextView.setOnClickListener {
+            val email = findViewById<EditText>(R.id.signInEmailEditText).text.toString().trim()
+            if (email.isEmpty()) {
+                showError("Please enter your email in the Sign In field first")
+            } else {
+                (context as androidx.appcompat.app.AppCompatActivity).lifecycleScope.launch {
+                    val success = FirebaseManager.resetPassword(email)
+                    if (success) {
+                        Toast.makeText(context, "Password reset email sent to $email", Toast.LENGTH_LONG).show()
+                    } else {
+                        showError("Failed to send reset email")
+                    }
+                }
+            }
+        }
+
+        switchModeTextView.setOnClickListener {
+            val authTabLayout = findViewById<TabLayout>(R.id.authTabLayout)
+            val newTabPosition = if (isSignUpMode) 1 else 0
+            authTabLayout.getTabAt(newTabPosition)?.select()
+        }
+    }
+
+    private fun setupHoverAnimations() {
+        val forgetPasswordTextView = findViewById<TextView>(R.id.forgetPasswordTextView)
+        val switchModeTextView = findViewById<TextView>(R.id.switchModeTextView)
+
+        addHoverAnimation(forgetPasswordTextView)
+        addHoverAnimation(switchModeTextView)
+    }
+
+    private fun addHoverAnimation(view: android.view.View) {
+        view.setOnTouchListener { v, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(100).start()
+                }
+                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(100).start()
+                }
+            }
+            false // Let the click listener handle the actual click
         }
     }
 

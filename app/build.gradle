@@ -55,4 +55,12 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore-ktx'
     implementation 'com.google.firebase:firebase-database-ktx'
     implementation 'com.google.firebase:firebase-firestore:26.0.2'
+
+    // Glide for animated GIFs
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+
+
+
+    // Agora Voice Chat
+    implementation 'io.agora.rtc:full-sdk:4.3.0'
 }

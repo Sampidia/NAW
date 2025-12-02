@@ -16,6 +16,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.naijaayo.worldwide.network.FirebaseManager
 import com.naijaayo.worldwide.theme.AvatarPreferenceManager
 import com.naijaayo.worldwide.theme.NigerianThemeManager
+import android.view.MotionEvent
+import android.view.animation.ScaleAnimation
+import androidx.appcompat.app.AlertDialog
+import com.bumptech.glide.Glide
 import kotlinx.coroutines.launch
 
 class ProfileActivity : AppCompatActivity() {
@@ -37,6 +41,7 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var toggleAuthMode: TextView
     private lateinit var forgotPasswordText: TextView
     private lateinit var logoutButton: Button
+    private lateinit var authErrorText: TextView
 
     // --- State ---
     private var selectedAvatarId: String = "ayo"
@@ -64,7 +69,12 @@ class ProfileActivity : AppCompatActivity() {
         setupTabs()
         setupAuthLogic()
         setupConfirmButton()
+
+        setupHoverAnimations()
         updateAuthUI()
+
+        // Load GIF
+        Glide.with(this).load(R.raw.logo_animate).into(findViewById(R.id.appLogo))
     }
 
     override fun onResume() {
@@ -92,6 +102,7 @@ class ProfileActivity : AppCompatActivity() {
         toggleAuthMode = findViewById(R.id.toggleAuthMode)
         forgotPasswordText = findViewById(R.id.forgotPasswordText)
         logoutButton = findViewById(R.id.logoutButton)
+        authErrorText = findViewById(R.id.authErrorText)
     }
 
     private fun updateUI() {
@@ -127,6 +138,7 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun setupAuthLogic() {
         authActionButton.setOnClickListener {
+            authErrorText.visibility = View.GONE
             if (isLoginMode) {
                 performLogin()
             } else {
@@ -136,13 +148,67 @@ class ProfileActivity : AppCompatActivity() {
 
         toggleAuthMode.setOnClickListener {
             isLoginMode = !isLoginMode
+            authErrorText.visibility = View.GONE
             updateAuthUI()
+        }
+
+        forgotPasswordText.setOnClickListener {
+            showForgotPasswordDialog()
         }
 
         logoutButton.setOnClickListener {
             auth.signOut()
             updateUI()
         }
+    }
+
+    private fun showForgotPasswordDialog() {
+        val input = EditText(this)
+        input.hint = "Enter your email"
+        input.inputType = android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+
+        AlertDialog.Builder(this)
+            .setTitle("Reset Password")
+            .setMessage("Enter your email address to receive a password reset link.")
+            .setView(input)
+            .setPositiveButton("Send") { _, _ ->
+                val email = input.text.toString().trim()
+                if (email.isNotEmpty()) {
+                    auth.sendPasswordResetEmail(email)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "Reset link sent to $email", Toast.LENGTH_LONG).show()
+                        }
+                        .addOnFailureListener { e ->
+                            authErrorText.text = "Error: ${e.message}"
+                            authErrorText.visibility = View.VISIBLE
+                        }
+                } else {
+                    Toast.makeText(this, "Please enter an email.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun setupHoverAnimations() {
+        val scaleDown = ScaleAnimation(1f, 0.95f, 1f, 0.95f, ScaleAnimation.RELATIVE_TO_SELF, 0.5f, ScaleAnimation.RELATIVE_TO_SELF, 0.5f)
+        scaleDown.duration = 100
+        scaleDown.fillAfter = true
+
+        val scaleUp = ScaleAnimation(0.95f, 1f, 0.95f, 1f, ScaleAnimation.RELATIVE_TO_SELF, 0.5f, ScaleAnimation.RELATIVE_TO_SELF, 0.5f)
+        scaleUp.duration = 100
+        scaleUp.fillAfter = true
+
+        val touchListener = View.OnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> v.startAnimation(scaleDown)
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> v.startAnimation(scaleUp)
+            }
+            false
+        }
+
+        forgotPasswordText.setOnTouchListener(touchListener)
+        toggleAuthMode.setOnTouchListener(touchListener)
     }
 
     private fun updateAuthUI() {
@@ -159,6 +225,8 @@ class ProfileActivity : AppCompatActivity() {
             toggleAuthMode.text = "Already have an account? Log in"
             forgotPasswordText.visibility = View.GONE
         }
+        // Hide error text when switching modes
+        authErrorText.visibility = View.GONE
     }
 
     private fun performLogin() {
@@ -171,7 +239,8 @@ class ProfileActivity : AppCompatActivity() {
                 if (success) {
                     updateUI()
                 } else {
-                    Toast.makeText(baseContext, "Invalid login details", Toast.LENGTH_SHORT).show()
+                    authErrorText.text = "Invalid login details. Please check your username/email and password."
+                    authErrorText.visibility = View.VISIBLE
                 }
             }
         } else {
@@ -191,7 +260,8 @@ class ProfileActivity : AppCompatActivity() {
                     auth.currentUser?.let { saveUserProfile(it.uid) }
                     updateUI()
                 } else {
-                    Toast.makeText(baseContext, "Registration failed.", Toast.LENGTH_SHORT).show()
+                    authErrorText.text = "Registration failed. Please try again."
+                    authErrorText.visibility = View.VISIBLE
                 }
             }
         } else {

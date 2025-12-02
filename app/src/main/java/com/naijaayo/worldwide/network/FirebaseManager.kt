@@ -8,34 +8,7 @@ import com.google.firebase.firestore.Transaction
 import com.naijaayo.worldwide.leaderboard.LeaderboardEntry
 import kotlinx.coroutines.tasks.await
 
-// --- Data classes for Realtime Database game structure ---
 
-@IgnoreExtraProperties
-data class GameState(
-    val board: List<Int> = List(12) { 4 },
-    val nextPlayerUid: String? = null,
-    val winnerUid: String? = null,
-    val isGameOver: Boolean = false
-)
-
-@IgnoreExtraProperties
-data class Player(
-    val uid: String? = null,
-    val displayName: String? = null,
-    val avatarId: String? = null
-)
-
-@IgnoreExtraProperties
-data class Game(
-    val roomId: String? = null,
-    val roomCode: String? = null,
-    val creatorUid: String? = null,
-    val players: Map<String, Player> = emptyMap(),
-    val status: String = "waiting",
-    val gameState: GameState = GameState(),
-    val isPrivate: Boolean = false,
-    val level: String = "MEDIUM"
-)
 
 object FirebaseManager {
 
@@ -48,6 +21,8 @@ object FirebaseManager {
     private val onlineUsersRef = realtimeDatabase.getReference("status/online_users")
     private val matchmakingPoolRef = realtimeDatabase.getReference("matchmaking_pool")
     internal val gamesRef = realtimeDatabase.getReference("games")
+    private val savedGamesRef = realtimeDatabase.getReference("saved_games")
+    private val usersRef = firestore.collection("users")
 
     private var onDisconnectHandler: OnDisconnect? = null
 
@@ -67,33 +42,33 @@ object FirebaseManager {
     fun cancelMatchmaking(uid: String) { /* ... */ }
 
     // --- "Play with Friends" - Room Management ---
-    suspend fun createPrivateRoom(player: Player, roomCode: String, level: String = "MEDIUM"): String {
+    suspend fun createRoom(player: Player, roomCode: String, level: String = "MEDIUM"): String {
         val roomId = (100000..999999).random().toString() // Generate 6-digit ID
-        val game = Game(
+        val NetworkGame = NetworkGame(
             roomId = roomId,
             roomCode = roomCode,
             creatorUid = player.uid,
             players = mapOf(player.uid!! to player),
             status = "waiting",
-            isPrivate = true,
+            isPrivate = false, // Public by default now
             level = level
         )
-        gamesRef.child(roomId).setValue(game).await()
+        gamesRef.child(roomId).setValue(NetworkGame).await()
         return roomId
     }
 
     suspend fun startGame(roomId: String) {
         val roomRef = gamesRef.child(roomId)
         val snapshot = roomRef.get().await()
-        val game = snapshot.getValue(Game::class.java) ?: return
+        val NetworkGame = snapshot.getValue(NetworkGame::class.java) ?: return
         
-        // Initialize game state with first player's turn
-        val firstPlayerUid = game.players.values.firstOrNull()?.uid
+        // Initialize NetworkGame state with first player's turn
+        val firstPlayerUid = NetworkGame.players.values.firstOrNull()?.uid
         val initialGameState = GameState(
             board = List(12) { 4 },
             nextPlayerUid = firstPlayerUid,
             winnerUid = null,
-            isGameOver = false
+            gameOver = false
         )
         
         roomRef.child("status").setValue("playing").await()
@@ -104,9 +79,9 @@ object FirebaseManager {
         return try {
             val roomRef = gamesRef.child(roomId)
             val snapshot = roomRef.get().await()
-            val game = snapshot.getValue(Game::class.java)
+            val NetworkGame = snapshot.getValue(NetworkGame::class.java)
             
-            if (game != null && game.status == "waiting" && game.players.size < 2) {
+            if (NetworkGame != null && NetworkGame.status == "waiting" && NetworkGame.players.size < 2) {
                 roomRef.child("players").child(player.uid!!).setValue(player).await()
                 true
             } else {
@@ -132,14 +107,15 @@ object FirebaseManager {
     }
 
 
-    fun listenForPublicRooms(onRoomsUpdated: (rooms: List<Game>) -> Unit): ValueEventListener {
+    fun listenForPublicRooms(onRoomsUpdated: (rooms: List<NetworkGame>) -> Unit): ValueEventListener {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val rooms = mutableListOf<Game>()
+                val rooms = mutableListOf<NetworkGame>()
                 for (child in snapshot.children) {
-                    val game = child.getValue(Game::class.java)
-                    if (game != null && game.isPrivate) {
-                        rooms.add(game)
+                    val NetworkGame = child.getValue(NetworkGame::class.java)
+                    // Show all rooms that are waiting, regardless of private flag (since we want to see created rooms)
+                    if (NetworkGame != null && NetworkGame.status == "waiting") {
+                        rooms.add(NetworkGame)
                     }
                 }
                 onRoomsUpdated(rooms)
@@ -150,13 +126,13 @@ object FirebaseManager {
         return listener
     }
 
-    // --- In-Game Logic ---
-    fun listenForGameStateUpdates(roomId: String, onUpdate: (game: Game) -> Unit): ValueEventListener {
+    // --- In-NetworkGame Logic ---
+    fun listenForGameStateUpdates(roomId: String, onUpdate: (NetworkGame: NetworkGame) -> Unit): ValueEventListener {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val game = snapshot.getValue(Game::class.java)
-                if (game != null) {
-                    onUpdate(game)
+                val NetworkGame = snapshot.getValue(NetworkGame::class.java)
+                if (NetworkGame != null) {
+                    onUpdate(NetworkGame)
                 }
             }
             override fun onCancelled(error: DatabaseError) {}
@@ -169,34 +145,34 @@ object FirebaseManager {
         try {
             val roomRef = gamesRef.child(roomId)
             val snapshot = roomRef.get().await()
-            val game = snapshot.getValue(Game::class.java) ?: return
+            val NetworkGame = snapshot.getValue(NetworkGame::class.java) ?: return
             
             // Get current user
             val currentUid = auth.currentUser?.uid ?: return
             
             // Verify it's the player's turn
-            if (game.gameState.nextPlayerUid != currentUid) {
+            if (NetworkGame.gameState.nextPlayerUid != currentUid) {
                 android.util.Log.w("FirebaseManager", "Not player's turn")
                 return
             }
             
             // Convert Firebase GameState to Local GameState
-            val level = when (game.level) {
+            val level = when (NetworkGame.level) {
                 "EASY" -> com.naijaayo.worldwide.GameLevel.EASY
                 "HARD" -> com.naijaayo.worldwide.GameLevel.HARD
                 else -> com.naijaayo.worldwide.GameLevel.MEDIUM
             }
             
             // Determine player number (1 or 2)
-            val playersList = game.players.values.toList()
+            val playersList = NetworkGame.players.values.toList()
             val playerNumber = if (playersList.getOrNull(0)?.uid == currentUid) 1 else 2
             
             val localGameState = com.naijaayo.worldwide.LocalGameState(
-                pits = game.gameState.board.toIntArray(),
-                player1Score = 0, // Scores tracked separately in multiplayer
-                player2Score = 0,
+                pits = NetworkGame.gameState.board.toIntArray(),
+                player1Score = NetworkGame.gameState.player1Score, // Use existing scores from Firebase
+                player2Score = NetworkGame.gameState.player2Score,
                 currentPlayer = playerNumber,
-                gameOver = game.gameState.isGameOver,
+                gameOver = NetworkGame.gameState.gameOver,
                 level = level
             )
             
@@ -204,30 +180,40 @@ object FirebaseManager {
             val gameEngine = com.naijaayo.worldwide.game.LocalGameEngine()
             val newLocalState = gameEngine.makeMove(localGameState, pitIndex, playerNumber)
             
+            if (newLocalState != null) {
+                android.util.Log.d("FirebaseManager", "Move calculated. GameOver: ${newLocalState.gameOver}, P1: ${newLocalState.player1Score}, P2: ${newLocalState.player2Score}")
+                android.util.Log.d("FirebaseManager", "Board: ${newLocalState.pits.contentToString()}")
+            }
+            
+            
             if (newLocalState == null) {
                 android.util.Log.w("FirebaseManager", "Invalid move")
                 return
             }
             
             // Determine next player
-            val nextPlayerUid = if (newLocalState.currentPlayer == 1) {
-                playersList.getOrNull(0)?.uid
+            val nextPlayerUid = if (newLocalState!!.currentPlayer == 1) {
+                (playersList.getOrNull(0) as? Player)?.uid
             } else {
-                playersList.getOrNull(1)?.uid
+                (playersList.getOrNull(1) as? Player)?.uid
             }
             
             // Convert back to Firebase GameState
             val newFirebaseState = GameState(
-                board = newLocalState.pits.toList(),
+                board = newLocalState!!.pits.toList(),
                 nextPlayerUid = nextPlayerUid,
-                winnerUid = if (newLocalState.gameOver) {
-                    when (newLocalState.winner) {
-                        1 -> playersList.getOrNull(0)?.uid
-                        2 -> playersList.getOrNull(1)?.uid
+                winnerUid = if (newLocalState!!.gameOver) {
+                    when (newLocalState!!.winner) {
+                        1 -> (playersList.getOrNull(0) as? Player)?.uid
+                        2 -> (playersList.getOrNull(1) as? Player)?.uid
                         else -> null
                     }
                 } else null,
-                isGameOver = newLocalState.gameOver
+                gameOver = newLocalState!!.gameOver,
+                lastMovePitIndex = pitIndex,
+                lastMovePlayerUid = currentUid,
+                player1Score = newLocalState!!.player1Score,
+                player2Score = newLocalState!!.player2Score
             )
             
             // Update Firebase
@@ -239,6 +225,93 @@ object FirebaseManager {
         }
     }
     fun removeListener(listener: ValueEventListener, ref: DatabaseReference? = null) { (ref ?: gamesRef).removeEventListener(listener) }
+
+    // --- Save / Resume Game Logic ---
+
+    fun saveGame(roomCode: String, onComplete: (Boolean, String) -> Unit) {
+        // 1. Fetch current game state from 'games/{roomCode}'
+        gamesRef.child(roomCode).get().addOnSuccessListener { snapshot ->
+            val game = snapshot.getValue(NetworkGame::class.java)
+            if (game != null) {
+                // 2. Save to 'saved_games/{roomCode}'
+                savedGamesRef.child(roomCode).setValue(game).addOnSuccessListener {
+                    // 3. Add to both players' saved game lists in Firestore
+                    val players = game.players.values.toList()
+                    val batch = firestore.batch()
+                    
+                    players.forEach { player ->
+                        player.uid?.let { uid ->
+                            val savedGameRef = usersRef.document(uid).collection("saved_games_list").document(roomCode)
+                            val savedGameInfo = mapOf(
+                                "roomCode" to roomCode,
+                                "player1Name" to (players.getOrNull(0)?.displayName ?: "Player 1"),
+                                "player1Avatar" to (players.getOrNull(0)?.avatarId ?: "char_ayo_portrait"),
+                                "player2Name" to (players.getOrNull(1)?.displayName ?: "Player 2"),
+                                "player2Avatar" to (players.getOrNull(1)?.avatarId ?: "char_ayo_portrait"),
+                                "timestamp" to System.currentTimeMillis()
+                            )
+                            batch.set(savedGameRef, savedGameInfo)
+                        }
+                    }
+                    
+                    batch.commit().addOnSuccessListener {
+                        onComplete(true, "Game saved successfully")
+                    }.addOnFailureListener { e ->
+                        onComplete(false, "Failed to update player lists: ${e.message}")
+                    }
+                }.addOnFailureListener { e ->
+                    onComplete(false, "Failed to save game data: ${e.message}")
+                }
+            } else {
+                onComplete(false, "Game not found")
+            }
+        }.addOnFailureListener { e ->
+            onComplete(false, "Failed to fetch game: ${e.message}")
+        }
+    }
+
+    suspend fun resumeGame(roomCode: String): Boolean {
+        return try {
+            // 1. Check if active game exists
+            val activeGameSnapshot = gamesRef.child(roomCode).get().await()
+            if (activeGameSnapshot.exists()) {
+                // Game is already active, just join it
+                return true
+            }
+
+            // 2. If not active, fetch from saved_games
+            val savedGameSnapshot = savedGamesRef.child(roomCode).get().await()
+            val savedGame = savedGameSnapshot.getValue(NetworkGame::class.java)
+
+            if (savedGame != null) {
+                // 3. Rehydrate: Write back to 'games/{roomCode}'
+                // Set status to 'playing' just in case it was 'waiting' or something else
+                val rehydratedGame = savedGame.copy(status = "playing")
+                gamesRef.child(roomCode).setValue(rehydratedGame).await()
+                return true
+            } else {
+                return false // Saved game not found
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error resuming game", e)
+            return false
+        }
+    }
+
+    suspend fun getSavedGames(): List<Map<String, Any>> {
+        return try {
+            val uid = auth.currentUser?.uid ?: return emptyList()
+            val snapshot = usersRef.document(uid).collection("saved_games_list")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .get()
+                .await()
+            
+            snapshot.documents.mapNotNull { it.data }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
 
     // --- New, Specific Leaderboard Logic ---
 
@@ -256,6 +329,112 @@ object FirebaseManager {
 
     suspend fun updateMultiplayerScore(scoreToAdd: Long, displayName: String, avatarId: String) {
         updateScoreInCollection("leaderboard_mp", scoreToAdd, displayName, avatarId)
+    }
+    // --- NetworkGame Statistics Tracking ---
+    enum class MatchResult {
+        WIN, LOSS, DRAW
+    }
+
+    suspend fun recordSinglePlayerResult(
+        userId: String,
+        result: MatchResult,
+        displayName: String,
+        avatarId: String
+    ) {
+        val userDocRef = firestore.collection("users").document(userId)
+        
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(userDocRef)
+            val stats = snapshot.get("stats") as? Map<String, Any> ?: emptyMap()
+            val singlePlayerStats = stats["singlePlayer"] as? MutableMap<String, Any> ?: mutableMapOf()
+            
+            val wins = (singlePlayerStats["wins"] as? Long) ?: 0L
+            val losses = (singlePlayerStats["losses"] as? Long) ?: 0L
+            val draws = (singlePlayerStats["draws"] as? Long) ?: 0L
+            val totalPoints = (singlePlayerStats["totalPoints"] as? Long) ?: 0L
+            
+            when (result) {
+                MatchResult.WIN -> {
+                    singlePlayerStats["wins"] = wins + 1
+                    singlePlayerStats["totalPoints"] = totalPoints + 3
+                }
+                MatchResult.LOSS -> {
+                    singlePlayerStats["losses"] = losses + 1
+                }
+                MatchResult.DRAW -> {
+                    singlePlayerStats["draws"] = draws + 1
+                    singlePlayerStats["totalPoints"] = totalPoints + 1
+                }
+            }
+            
+            val updatedStats = stats.toMutableMap()
+            updatedStats["singlePlayer"] = singlePlayerStats
+            
+            transaction.update(userDocRef, "stats", updatedStats)
+            null
+        }.await()
+    }
+
+    suspend fun recordMultiplayerResult(
+        player1Id: String,
+        player2Id: String,
+        winnerId: String?, // null for draw
+        player1Name: String,
+        player2Name: String,
+        player1Avatar: String,
+        player2Avatar: String
+    ) {
+        // Determine results for both players
+        val player1Result = when {
+            winnerId == null -> MatchResult.DRAW
+            winnerId == player1Id -> MatchResult.WIN
+            else -> MatchResult.LOSS
+        }
+        
+        val player2Result = when {
+            winnerId == null -> MatchResult.DRAW
+            winnerId == player2Id -> MatchResult.WIN
+            else -> MatchResult.LOSS
+        }
+        
+        // Update both players' stats
+        updatePlayerMultiplayerStats(player1Id, player1Result)
+        updatePlayerMultiplayerStats(player2Id, player2Result)
+    }
+    
+    private suspend fun updatePlayerMultiplayerStats(userId: String, result: MatchResult) {
+        val userDocRef = firestore.collection("users").document(userId)
+        
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(userDocRef)
+            val stats = snapshot.get("stats") as? Map<String, Any> ?: emptyMap()
+            val multiplayerStats = stats["multiplayer"] as? MutableMap<String, Any> ?: mutableMapOf()
+            
+            val wins = (multiplayerStats["wins"] as? Long) ?: 0L
+            val losses = (multiplayerStats["losses"] as? Long) ?: 0L
+            val draws = (multiplayerStats["draws"] as? Long) ?: 0L
+            val totalPoints = (multiplayerStats["totalPoints"] as? Long) ?: 0L
+            
+            when (result) {
+                MatchResult.WIN -> {
+                    multiplayerStats["wins"] = wins + 1
+                    multiplayerStats["totalPoints"] = totalPoints + 3
+                }
+                MatchResult.LOSS -> {
+                    multiplayerStats["losses"] = losses + 1
+                }
+                MatchResult.DRAW -> {
+                    multiplayerStats["draws"] = draws + 1
+                    multiplayerStats["totalPoints"] = totalPoints + 1
+                }
+            }
+            
+            val updatedStats = stats.toMutableMap()
+            updatedStats["multiplayer"] = multiplayerStats
+            
+            transaction.update(userDocRef, "stats", updatedStats)
+            null
+        }.await()
     }
 
     // Private helper functions to avoid code duplication
@@ -276,8 +455,7 @@ object FirebaseManager {
         auth.currentUser?.let { user ->
             val userDocRef = firestore.collection(collectionName).document(user.uid)
 
-            firestore.runTransaction {
-                transaction ->
+            firestore.runTransaction { transaction ->
                 val snapshot = transaction.get(userDocRef)
                 val currentScore = snapshot.getLong("score") ?: 0L
                 val newScore = currentScore + scoreToAdd
@@ -379,5 +557,15 @@ object FirebaseManager {
 
     suspend fun saveUserAvatar(uid: String, avatarId: String): Boolean {
         return saveUserProfile(uid, mapOf("avatarId" to avatarId))
+    }
+
+    suspend fun resetPassword(email: String): Boolean {
+        return try {
+            auth.sendPasswordResetEmail(email).await()
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error sending reset password email", e)
+            false
+        }
     }
 }

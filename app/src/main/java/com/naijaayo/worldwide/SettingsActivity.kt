@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
 import com.naijaayo.worldwide.theme.NigerianThemeManager
+import com.bumptech.glide.Glide
+import android.widget.ImageView
 
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,6 +21,9 @@ class SettingsActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         setContentView(R.layout.activity_settings)
+
+        val appLogo = findViewById<ImageView>(R.id.appLogo)
+        Glide.with(this).load(R.raw.logo_animate).into(appLogo)
 
         // Profile button - navigate to existing ProfileActivity
         findViewById<Button>(R.id.profileButton).setOnClickListener {

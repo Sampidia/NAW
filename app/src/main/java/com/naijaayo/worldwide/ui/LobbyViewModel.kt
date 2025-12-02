@@ -5,12 +5,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.firebase.database.ValueEventListener
 import com.naijaayo.worldwide.network.FirebaseManager
-import com.naijaayo.worldwide.network.Game
+import com.naijaayo.worldwide.network.NetworkGame
 
 class LobbyViewModel : ViewModel() {
 
-    private val _rooms = MutableLiveData<List<Game>>()
-    val rooms: LiveData<List<Game>> = _rooms
+    private val _rooms = MutableLiveData<List<NetworkGame>>()
+    val rooms: LiveData<List<NetworkGame>> = _rooms
 
     private var roomsListener: ValueEventListener? = null
 

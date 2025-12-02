@@ -16,6 +16,8 @@ import com.naijaayo.worldwide.theme.NigerianThemeManager
 import kotlinx.coroutines.launch
 import com.naijaayo.worldwide.FriendsActivity
 import com.naijaayo.worldwide.GameRoomActivity
+import com.bumptech.glide.Glide
+import android.widget.ImageView
 
 class MainMenuActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,6 +29,9 @@ class MainMenuActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         setContentView(R.layout.activity_main_menu)
+
+        val appLogo = findViewById<ImageView>(R.id.appLogo)
+        Glide.with(this).load(R.raw.logo_animate).into(appLogo)
 
         Handler().postDelayed({ BackgroundMusicManager.startBackgroundMusic() }, 1000)
 
@@ -63,17 +68,23 @@ class MainMenuActivity : AppCompatActivity() {
     }
 
     private fun showMultiplayerOptionsDialog() {
-        val options = arrayOf("Play Now", "Play with Friends")
+        val dialogView = layoutInflater.inflate(R.layout.dialog_multiplayer_selection, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
 
-        AlertDialog.Builder(this)
-            .setTitle("Multiplayer Mode")
-            .setItems(options) { dialog, which ->
-                when (which) {
-                    0 -> startGameNow() // "Play Now"
-                    1 -> startActivity(Intent(this, GameRoomActivity::class.java)) // "Play with Friends"
-                }
-            }
-            .show()
+        dialogView.findViewById<Button>(R.id.playNowButton).setOnClickListener {
+            dialog.dismiss()
+            startGameNow()
+        }
+
+        dialogView.findViewById<Button>(R.id.playWithFriendsButton).setOnClickListener {
+            dialog.dismiss()
+            startActivity(Intent(this, GameRoomActivity::class.java))
+        }
+
+        dialog.show()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
 
     private fun startGameNow() {

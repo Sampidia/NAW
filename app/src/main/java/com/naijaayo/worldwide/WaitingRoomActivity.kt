@@ -17,7 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
 import com.naijaayo.worldwide.network.FirebaseManager
-import com.naijaayo.worldwide.network.Game
+import com.naijaayo.worldwide.network.NetworkGame
 import com.naijaayo.worldwide.theme.AvatarPreferenceManager
 
 class WaitingRoomActivity : AppCompatActivity() {
@@ -40,7 +40,7 @@ class WaitingRoomActivity : AppCompatActivity() {
     private var roomId: String? = null
     private var roomCode: String? = null
     private var gameListener: ValueEventListener? = null
-    private var currentGame: Game? = null
+    private var currentGame: NetworkGame? = null
     private var currentUserId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -127,7 +127,7 @@ class WaitingRoomActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateUI(game: Game) {
+    private fun updateUI(game: NetworkGame) {
         val players = game.players.values.toList()
         val playerCount = players.size
 

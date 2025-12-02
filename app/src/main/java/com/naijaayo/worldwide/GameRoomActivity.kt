@@ -14,11 +14,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.database.ValueEventListener
 import com.naijaayo.worldwide.network.FirebaseManager
-import com.naijaayo.worldwide.network.Game
+import com.naijaayo.worldwide.network.NetworkGame
 import com.naijaayo.worldwide.network.Player
 import com.naijaayo.worldwide.theme.AvatarPreferenceManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.bumptech.glide.Glide
 
 class GameRoomActivity : AppCompatActivity() {
 
@@ -26,7 +27,7 @@ class GameRoomActivity : AppCompatActivity() {
     private lateinit var searchJoinButton: Button
     private lateinit var roomsRecyclerView: RecyclerView
     private lateinit var createRoomButton: Button
-    private lateinit var currentUserAvatar: ImageView
+    private lateinit var resumeGameButton: Button
     private lateinit var loadingProgressBar: ProgressBar
 
     private lateinit var roomAdapter: RoomAdapter
@@ -43,7 +44,6 @@ class GameRoomActivity : AppCompatActivity() {
         initializeViews()
         setupRecyclerView()
         setupListeners()
-        loadCurrentUserAvatar()
     }
 
     override fun onResume() {
@@ -61,13 +61,14 @@ class GameRoomActivity : AppCompatActivity() {
         searchJoinButton = findViewById(R.id.searchJoinButton)
         roomsRecyclerView = findViewById(R.id.roomsRecyclerView)
         createRoomButton = findViewById(R.id.createRoomButton)
-        currentUserAvatar = findViewById(R.id.currentUserAvatar)
+        resumeGameButton = findViewById(R.id.resumeGameButton)
         loadingProgressBar = findViewById(R.id.loadingProgressBar)
     }
 
     private fun setupRecyclerView() {
         roomAdapter = RoomAdapter(emptyList()) { game ->
-            joinRoom(game.roomId ?: "")
+            // Show dialog instead of joining directly
+            showJoinRoomDialog()
         }
         roomsRecyclerView.layoutManager = LinearLayoutManager(this)
         roomsRecyclerView.adapter = roomAdapter
@@ -86,11 +87,10 @@ class GameRoomActivity : AppCompatActivity() {
         createRoomButton.setOnClickListener {
             createRoom()
         }
-    }
 
-    private fun loadCurrentUserAvatar() {
-        val avatarId = AvatarPreferenceManager.getUserAvatar()
-        currentUserAvatar.setImageResource(AvatarPreferenceManager.getAvatarPortrait(avatarId))
+        resumeGameButton.setOnClickListener {
+            startActivity(Intent(this, ResumeGameActivity::class.java))
+        }
     }
 
     private fun listenForRooms() {
@@ -103,8 +103,11 @@ class GameRoomActivity : AppCompatActivity() {
     private fun createRoom() {
         // Show level selection dialog
         val dialogView = layoutInflater.inflate(R.layout.dialog_level_selection, null)
+        
+        val appLogo = dialogView.findViewById<ImageView>(R.id.appLogo)
+        Glide.with(this).load(R.raw.logo_animate).into(appLogo)
+
         val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Select Game Level")
             .setView(dialogView)
             .setCancelable(true)
             .create()
@@ -131,18 +134,34 @@ class GameRoomActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun showRules() {
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Game Rules")
-            .setMessage("Naija Ayo is a traditional African board game.\n\n" +
-                "Objective: Capture more seeds than your opponent.\n\n" +
-                "Levels:\n" +
-                "- Easy: Capture 2 or 3 seeds\n" +
-                "- Medium: Capture 3 seeds (standard)\n" +
-                "- Hard: Capture 4 seeds\n\n" +
-                "Sow seeds counterclockwise. Capture opponent pits that match the level's seed count after sowing if a transition occurs.")
-            .setPositiveButton("OK", null)
-            .show()
+        private fun showRules() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_game_rules, null)
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        val rulesContent = dialogView.findViewById<android.widget.TextView>(R.id.rulesContent)
+        val rulesText = "Naija Ayo is a traditional African board game.<br><br>" +
+                "<b>Objective:</b> Capture more seeds than your opponent.<br><br>" +
+                "<b>Levels:</b><br>" +
+                "- Easy: Capture 2 or 3 seeds<br>" +
+                "- Medium: Capture 3 seeds (standard)<br>" +
+                "- Hard: Capture 4 seeds<br><br>" +
+                "Sow seeds counterclockwise. Capture opponent pits that match the level's seed count after sowing if a transition occurs."
+        
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            rulesContent.text = android.text.Html.fromHtml(rulesText, android.text.Html.FROM_HTML_MODE_LEGACY)
+        } else {
+            @Suppress("DEPRECATION")
+            rulesContent.text = android.text.Html.fromHtml(rulesText)
+        }
+
+        dialogView.findViewById<android.widget.Button>(R.id.okButton).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
 
     private fun createRoomWithLevel(level: String) {
@@ -161,7 +180,7 @@ class GameRoomActivity : AppCompatActivity() {
                 
                 // Generate 6-7 digit room code
                 val roomCode = generateRoomCode()
-                val roomId = FirebaseManager.createPrivateRoom(player, roomCode, level)
+                val roomId = FirebaseManager.createRoom(player, roomCode, level)
                 
                 navigateToWaitingRoom(roomId, roomCode)
             } else {
@@ -179,6 +198,35 @@ class GameRoomActivity : AppCompatActivity() {
         return (1..codeLength).map { chars.random() }.joinToString("")
     }
 
+    private fun showJoinRoomDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_join_room, null)
+        val roomIdInput = dialogView.findViewById<EditText>(R.id.roomIdInput)
+        val joinButton = dialogView.findViewById<Button>(R.id.joinRoomButton)
+        val cancelButton = dialogView.findViewById<Button>(R.id.cancelButton)
+        
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+        
+        joinButton.setOnClickListener {
+            val roomCode = roomIdInput.text.toString().trim().uppercase()
+            if (roomCode.isNotEmpty()) {
+                dialog.dismiss()
+                joinRoom(roomCode)
+            } else {
+                Toast.makeText(this, "Please enter a Room ID", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+        }
+        
+        dialog.show()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+    }
+
     private fun joinRoom(roomCode: String) {
         loadingProgressBar.visibility = View.VISIBLE
         
@@ -189,7 +237,7 @@ class GameRoomActivity : AppCompatActivity() {
                 val roomId = FirebaseManager.findRoomByCode(roomCode.uppercase())
                 
                 if (roomId == null) {
-                    Toast.makeText(this@GameRoomActivity, "Game Room Code Invalid", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@GameRoomActivity, "NetworkGame Room Code Invalid", Toast.LENGTH_SHORT).show()
                     loadingProgressBar.visibility = View.GONE
                     return@launch
                 }
@@ -207,12 +255,12 @@ class GameRoomActivity : AppCompatActivity() {
                 } else {
                     // Check if room is full or already started
                     val roomSnapshot = FirebaseManager.gamesRef.child(roomId).get().await()
-                    val game = roomSnapshot.getValue(Game::class.java)
+                    val game = roomSnapshot.getValue(NetworkGame::class.java)
                     
                     if (game != null && game.players.size >= 2) {
-                        Toast.makeText(this@GameRoomActivity, "Game Room Full", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@GameRoomActivity, "NetworkGame Room Full", Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(this@GameRoomActivity, "Cannot join room. Game may have already started.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@GameRoomActivity, "Cannot join room. NetworkGame may have already started.", Toast.LENGTH_SHORT).show()
                     }
                 }
             } else {

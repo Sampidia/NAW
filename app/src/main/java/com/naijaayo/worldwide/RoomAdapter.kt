@@ -3,22 +3,24 @@ package com.naijaayo.worldwide
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AlphaAnimation
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.naijaayo.worldwide.network.Game
+import com.naijaayo.worldwide.network.NetworkGame
 import com.naijaayo.worldwide.theme.AvatarPreferenceManager
 
 class RoomAdapter(
-    private var rooms: List<Game>,
-    private val onJoinClick: (Game) -> Unit
+    private var rooms: List<NetworkGame>,
+    private val onJoinClick: (NetworkGame) -> Unit
 ) : RecyclerView.Adapter<RoomAdapter.RoomViewHolder>() {
 
     class RoomViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val creatorAvatar: ImageView = itemView.findViewById(R.id.creatorAvatar)
-        val roomNameText: TextView = itemView.findViewById(R.id.roomNameText)
-        val roomIdText: TextView = itemView.findViewById(R.id.roomIdText)
+        val p1Avatar: ImageView = itemView.findViewById(R.id.p1Avatar)
+        val p1Name: TextView = itemView.findViewById(R.id.p1Name)
+        val p2Avatar: ImageView = itemView.findViewById(R.id.p2Avatar)
+        val p2Name: TextView = itemView.findViewById(R.id.p2Name)
         val joinButton: Button = itemView.findViewById(R.id.joinButton)
     }
 
@@ -29,25 +31,47 @@ class RoomAdapter(
 
     override fun onBindViewHolder(holder: RoomViewHolder, position: Int) {
         val game = rooms[position]
-        val creator = game.players.values.firstOrNull()
         
-        holder.roomNameText.text = creator?.displayName?.let { "$it's Room" } ?: "Unknown Room"
-        holder.roomIdText.text = "ID: ${game.roomId}"
-        
-        val avatarId = creator?.avatarId ?: "ayo"
-        holder.creatorAvatar.setImageResource(AvatarPreferenceManager.getAvatarPortrait(avatarId))
+        // Player 1 (Creator) - usually the first player in the map
+        // We need to be careful as map order isn't guaranteed, but usually creator is first.
+        // Better strategy: Sort by join time or just take the first one found.
+        val players = game.players.values.toList()
+        val player1 = players.firstOrNull()
+        val player2 = if (players.size > 1) players[1] else null
+
+        // Bind Player 1
+        if (player1 != null) {
+            holder.p1Name.text = player1.displayName
+            holder.p1Avatar.setImageResource(AvatarPreferenceManager.getAvatarPortrait(player1.avatarId ?: "ayo"))
+        } else {
+            holder.p1Name.text = "Unknown"
+            holder.p1Avatar.setImageResource(R.drawable.char_ayo_portrait)
+        }
+
+        // Bind Player 2
+        if (player2 != null) {
+            holder.p2Name.text = player2.displayName
+            holder.p2Avatar.setImageResource(AvatarPreferenceManager.getAvatarPortrait(player2.avatarId ?: "ayo"))
+            holder.p2Avatar.alpha = 1.0f
+            holder.p2Name.alpha = 1.0f
+        } else {
+            holder.p2Name.text = "Waiting..."
+            holder.p2Avatar.setImageResource(R.drawable.char_ayo_portrait) // Default 'ayo' avatar
+            holder.p2Avatar.alpha = 0.4f // "Blur" / Ghost effect
+            holder.p2Name.alpha = 0.5f
+        }
 
         // Check if room is joinable
         val isJoinable = game.status == "waiting" && game.players.size < 2
         
         holder.joinButton.isEnabled = isJoinable
-        holder.joinButton.alpha = if (isJoinable) 1.0f else 0.5f
         
-        // Update button text based on status
-        holder.joinButton.text = when {
-            isJoinable -> "Join"
-            game.status == "playing" -> "Playing"
-            else -> "Full"
+        if (isJoinable) {
+            holder.joinButton.text = "Join Game"
+            holder.joinButton.alpha = 1.0f
+        } else {
+            holder.joinButton.text = "Full"
+            holder.joinButton.alpha = 0.5f
         }
 
         holder.joinButton.setOnClickListener {
@@ -55,11 +79,20 @@ class RoomAdapter(
                 onJoinClick(game)
             }
         }
+
+        // Animation
+        setFadeAnimation(holder.itemView)
+    }
+
+    private fun setFadeAnimation(view: View) {
+        val anim = AlphaAnimation(0.0f, 1.0f)
+        anim.duration = 500
+        view.startAnimation(anim)
     }
 
     override fun getItemCount() = rooms.size
 
-    fun updateRooms(newRooms: List<Game>) {
+    fun updateRooms(newRooms: List<NetworkGame>) {
         rooms = newRooms
         notifyDataSetChanged()
     }
