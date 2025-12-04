@@ -3,9 +3,13 @@ package com.naijaayo.worldwide.network
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.Transaction
 import com.naijaayo.worldwide.leaderboard.LeaderboardEntry
+import com.naijaayo.worldwide.model.Friend
+import com.naijaayo.worldwide.model.FriendRequest
+import com.naijaayo.worldwide.model.User
 import kotlinx.coroutines.tasks.await
 
 
@@ -567,5 +571,179 @@ object FirebaseManager {
             android.util.Log.e("FirebaseManager", "Error sending reset password email", e)
             false
         }
+    }
+
+    // --- Friend System ---
+
+    suspend fun searchUsers(query: String): List<User> {
+        return try {
+            val usersRef = firestore.collection("users")
+            
+            // Search by username
+            val usernameSnapshot = usersRef
+                .whereGreaterThanOrEqualTo("username", query)
+                .whereLessThanOrEqualTo("username", query + "\uf8ff")
+                .limit(10)
+                .get()
+                .await()
+            val usernameResults = usernameSnapshot.documents.mapNotNull { doc ->
+                doc.toObject(User::class.java)?.copy(id = doc.id)
+            }
+
+            // Search by email
+            val emailSnapshot = usersRef
+                .whereGreaterThanOrEqualTo("email", query)
+                .whereLessThanOrEqualTo("email", query + "\uf8ff")
+                .limit(10)
+                .get()
+                .await()
+            val emailResults = emailSnapshot.documents.mapNotNull { doc ->
+                doc.toObject(User::class.java)?.copy(id = doc.id)
+            }
+
+            // Combine and deduplicate
+            val combinedResults = (usernameResults + emailResults)
+                .distinctBy { it.id }
+                .filter { it.id != auth.currentUser?.uid }
+
+            android.util.Log.d("FirebaseManager", "Search complete. Username hits: ${usernameResults.size}, Email hits: ${emailResults.size}, Final unique: ${combinedResults.size}")
+            combinedResults.forEach { 
+                android.util.Log.d("FirebaseManager", "Found user: ${it.username}, ID: '${it.id}'") 
+            }
+            combinedResults
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error searching users", e)
+            emptyList()
+        }
+    }
+
+    suspend fun sendFriendRequest(toUser: User): Boolean {
+        val currentUser = auth.currentUser ?: return false
+        val fromUid = currentUser.uid
+
+        // Check if already friends or request pending (optional but good)
+        // For simplicity, just create the request
+        
+        
+        // Get current user profile for the request
+        val myProfile = getUserProfile(fromUid) ?: return false
+        
+        android.util.Log.d("FirebaseManager", "Sending friend request to: ${toUser.username} (ID: '${toUser.id}')")
+
+        if (toUser.id.isEmpty()) {
+            android.util.Log.e("FirebaseManager", "Cannot send friend request: Target user ID is empty!")
+            return false
+        }
+
+        val request = FriendRequest(
+            id = usersRef.document().id, // Generate ID
+            fromUid = fromUid,
+            fromUsername = myProfile["username"] as? String ?: "Unknown",
+            fromEmail = myProfile["email"] as? String ?: "",
+            fromAvatarId = myProfile["avatarId"] as? String ?: "ayo",
+            toUid = toUser.id,
+            status = "pending",
+            timestamp = System.currentTimeMillis()
+        )
+
+        return try {
+            // Add to recipient's friend_requests subcollection
+            val targetPath = "users/${toUser.id}/friend_requests/${request.id}"
+            android.util.Log.d("FirebaseManager", "Writing request to path: $targetPath")
+            
+            usersRef.document(toUser.id).collection("friend_requests")
+                .document(request.id)
+                .set(request)
+                .await()
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error sending friend request", e)
+            false
+        }
+    }
+
+    fun listenForFriendRequests(onRequestsUpdated: (List<FriendRequest>) -> Unit): ListenerRegistration? {
+        val uid = auth.currentUser?.uid ?: return null
+        
+        return usersRef.document(uid).collection("friend_requests")
+            .whereEqualTo("status", "pending")
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    android.util.Log.e("FirebaseManager", "Listen failed.", e)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val requests = snapshot.toObjects(FriendRequest::class.java)
+                    onRequestsUpdated(requests)
+                }
+            }
+    }
+
+    suspend fun acceptFriendRequest(request: FriendRequest): Boolean {
+        val currentUser = auth.currentUser ?: return false
+        val myUid = currentUser.uid
+
+        return try {
+            val batch = firestore.batch()
+
+            // 1. Add to my friends
+            val myFriendRef = usersRef.document(myUid).collection("friends").document(request.fromUid)
+            val myFriendData = Friend(
+                id = request.fromUid,
+                name = request.fromUsername,
+                avatar = request.fromAvatarId
+            )
+            batch.set(myFriendRef, myFriendData)
+
+            // 2. Add me to their friends
+            // Need my details
+            val myProfile = getUserProfile(myUid) ?: return false
+            val theirFriendRef = usersRef.document(request.fromUid).collection("friends").document(myUid)
+            val theirFriendData = Friend(
+                id = myUid,
+                name = myProfile["username"] as? String ?: "Unknown",
+                avatar = myProfile["avatarId"] as? String ?: "ayo"
+            )
+            batch.set(theirFriendRef, theirFriendData)
+
+            // 3. Delete the request
+            val requestRef = usersRef.document(myUid).collection("friend_requests").document(request.id)
+            batch.delete(requestRef)
+
+            batch.commit().await()
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error accepting friend request", e)
+            false
+        }
+    }
+
+    suspend fun declineFriendRequest(request: FriendRequest): Boolean {
+        val uid = auth.currentUser?.uid ?: return false
+        return try {
+            usersRef.document(uid).collection("friend_requests").document(request.id).delete().await()
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error declining friend request", e)
+            false
+        }
+    }
+
+    fun listenForFriends(onFriendsUpdated: (List<Friend>) -> Unit): ListenerRegistration? {
+        val uid = auth.currentUser?.uid ?: return null
+
+        return usersRef.document(uid).collection("friends")
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    android.util.Log.e("FirebaseManager", "Listen failed.", e)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val friends = snapshot.toObjects(Friend::class.java)
+                    onFriendsUpdated(friends)
+                }
+            }
     }
 }

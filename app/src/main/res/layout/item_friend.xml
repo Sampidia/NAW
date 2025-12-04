@@ -25,7 +25,7 @@
             android:id="@+id/friendName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
+            android:textColor="#4d311e"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintTop_toTopOf="parent"
@@ -37,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Offline"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="#4d311e"
             android:textSize="12sp"
             app:layout_constraintTop_toBottomOf="@+id/friendName"
             app:layout_constraintStart_toEndOf="@+id/friendAvatar" />
@@ -57,7 +57,7 @@
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackground"
             android:src="@android:drawable/ic_menu_send"
-            android:tint="@android:color/white"
+            android:tint="#4d311e"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />

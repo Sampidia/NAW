@@ -7,6 +7,8 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.naijaayo.worldwide.model.FriendRequest
+
 
 class FriendRequestAdapter(
     private var requests: List<FriendRequest>,
@@ -16,7 +18,7 @@ class FriendRequestAdapter(
     class FriendRequestViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val requesterAvatar: ImageView = view.findViewById(R.id.requesterAvatar)
         val requesterName: TextView = view.findViewById(R.id.requesterName)
-        val requesterEmail: TextView = view.findViewById(R.id.requesterEmail)
+        // Email removed from layout
         val acceptButton: Button = view.findViewById(R.id.acceptButton)
         val declineButton: Button = view.findViewById(R.id.declineButton)
     }
@@ -36,7 +38,7 @@ class FriendRequestAdapter(
 
         // Set requester info
         holder.requesterName.text = request.fromUsername
-        holder.requesterEmail.text = request.fromEmail
+        // Email binding removed
 
         // Set button click listeners
         holder.acceptButton.setOnClickListener {

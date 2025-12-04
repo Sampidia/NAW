@@ -42,7 +42,11 @@
             android:name=".ProfileActivity"
             android:screenOrientation="portrait"
             android:exported="false" />
-        <activity android:name=".friends.FriendsActivity" />
+        <activity android:name=".FriendsActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".SearchUserActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".SettingsActivity"
             android:screenOrientation="portrait" />

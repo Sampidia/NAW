@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.naijaayo.worldwide.model.User
 
 class SearchUserAdapter(
     private var users: List<User>,

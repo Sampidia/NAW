@@ -10,56 +10,60 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:padding="8dp">
 
-        <ImageView
-            android:id="@+id/requesterAvatar"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="16dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
+        <!-- Username area defines the width, avatar centers above it -->
         <TextView
             android:id="@+id/requesterName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="8dp"
+            android:textColor="@android:color/black"
+            android:textSize="14sp"
             android:textStyle="bold"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/requesterAvatar"
-            app:layout_constraintEnd_toStartOf="@+id/acceptButton" />
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:gravity="start"
+            app:layout_constraintTop_toBottomOf="@+id/requesterAvatar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/acceptButton"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
-        <TextView
-            android:id="@+id/requesterEmail"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/darker_gray"
-            android:textSize="12sp"
-            app:layout_constraintTop_toBottomOf="@+id/requesterName"
-            app:layout_constraintStart_toEndOf="@+id/requesterAvatar"
-            app:layout_constraintEnd_toStartOf="@+id/acceptButton" />
+        <!-- Avatar centered above the username area -->
+        <ImageView
+            android:id="@+id/requesterAvatar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/requesterName"
+            app:layout_constraintEnd_toEndOf="@+id/requesterName" />
 
         <Button
             android:id="@+id/acceptButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="Accept"
+            android:layout_height="40dp"
+            android:text="ACCEPT"
             android:textSize="12sp"
+            android:backgroundTint="#4d311e"
+            android:textColor="@android:color/white"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/declineButton" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/declineButton"
+            app:layout_constraintVertical_chainStyle="packed" />
 
         <Button
             android:id="@+id/declineButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Decline"
+            android:layout_height="40dp"
+            android:layout_marginTop="8dp"
+            android:text="DECLINE"
             android:textSize="12sp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            android:backgroundTint="#4d311e"
+            android:textColor="@android:color/white"
+            app:layout_constraintTop_toBottomOf="@+id/acceptButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
