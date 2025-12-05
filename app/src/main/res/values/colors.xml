@@ -9,4 +9,10 @@
     <color name="white">#FFFFFFFF</color>
     <color name="online_green">#FF4CAF50</color>
     <color name="offline_gray">#FF9E9E9E</color>
+    
+    <!-- Leaderboard Rank Colors -->
+    <color name="rank_gold">#FFD700</color>
+    <color name="rank_silver">#C0C0C0</color>
+    <color name="rank_bronze">#CD7F32</color>
+    <color name="rank_default">#4CAF50</color>
 </resources>

@@ -10,57 +10,56 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp">
+        android:padding="12dp">
 
-        <!-- Username area defines the width, avatar centers above it -->
-        <TextView
-            android:id="@+id/requesterName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginStart="8dp"
-            android:textColor="@android:color/black"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:gravity="start"
-            app:layout_constraintTop_toBottomOf="@+id/requesterAvatar"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/acceptButton"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
-        <!-- Avatar centered above the username area -->
+        <!-- Avatar on the left -->
         <ImageView
             android:id="@+id/requesterAvatar"
             android:layout_width="48dp"
             android:layout_height="48dp"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="@+id/requesterName"
-            app:layout_constraintEnd_toEndOf="@+id/requesterName" />
+            app:layout_constraintStart_toStartOf="parent" />
 
+        <!-- Username below avatar, left-aligned -->
+        <TextView
+            android:id="@+id/requesterName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="#4d311e"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintTop_toBottomOf="@+id/requesterAvatar"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Accept button on the right -->
         <Button
             android:id="@+id/acceptButton"
-            android:layout_width="wrap_content"
+            android:layout_width="100dp"
             android:layout_height="40dp"
             android:text="ACCEPT"
             android:textSize="12sp"
             android:backgroundTint="#4d311e"
             android:textColor="@android:color/white"
+            app:cornerRadius="20dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toTopOf="@+id/declineButton"
             app:layout_constraintVertical_chainStyle="packed" />
 
+        <!-- Decline button below Accept -->
         <Button
             android:id="@+id/declineButton"
-            android:layout_width="wrap_content"
+            android:layout_width="100dp"
             android:layout_height="40dp"
             android:layout_marginTop="8dp"
             android:text="DECLINE"
             android:textSize="12sp"
             android:backgroundTint="#4d311e"
             android:textColor="@android:color/white"
+            app:cornerRadius="20dp"
             app:layout_constraintTop_toBottomOf="@+id/acceptButton"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />

@@ -4,9 +4,15 @@ import com.google.firebase.firestore.IgnoreExtraProperties
 
 @IgnoreExtraProperties
 data class LeaderboardEntry(
-    val displayName: String? = null,
-    val score: Long = 0,
-    val avatarId: String? = null,
-    // The user's UID from Firebase Auth is used as the document ID
-    // so it doesn't need to be a field in the document itself.
-)
+    val id: String = "",
+    val displayName: String = "",
+    val username: String = "",
+    val avatarId: String = "ayo",
+    val totalPoints: Long = 0,
+    val wins: Long = 0,
+    val losses: Long = 0,
+    val draws: Long = 0
+) {
+    val games: Long get() = wins + losses + draws
+    val winRate: Int get() = if (games > 0) ((wins * 100) / games).toInt() else 0
+}

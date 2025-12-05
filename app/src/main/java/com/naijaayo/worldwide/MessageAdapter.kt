@@ -3,22 +3,16 @@ package com.naijaayo.worldwide
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import java.text.SimpleDateFormat
-import java.util.*
+import com.google.firebase.auth.FirebaseAuth
+import com.naijaayo.worldwide.model.Message
 
 class MessageAdapter(
-    private var messages: List<Message>,
-    private val onJoinGameClick: (GameInvitation) -> Unit
+    private var messages: List<Message> = emptyList()
 ) : RecyclerView.Adapter<MessageAdapter.MessageViewHolder>() {
 
-    class MessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val messageText: TextView = view.findViewById(R.id.messageText)
-        val messageTime: TextView = view.findViewById(R.id.messageTime)
-        val joinGameButton: Button = view.findViewById(R.id.joinGameButton)
-    }
+    private val currentUserId: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -27,39 +21,32 @@ class MessageAdapter(
     }
 
     override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
-        val message = messages[position]
-
-        // Set message content
-        holder.messageText.text = message.content
-
-        // Set timestamp
-        val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-        holder.messageTime.text = sdf.format(Date(message.timestamp))
-
-        // Handle game invitations
-        if (message.type == MessageType.GAME_INVITATION && message.gameInvitation != null) {
-            holder.joinGameButton.visibility = View.VISIBLE
-            holder.joinGameButton.setOnClickListener {
-                val gameInvitation = message.gameInvitation
-                if (gameInvitation != null) {
-                    onJoinGameClick(gameInvitation)
-                }
-            }
-        } else {
-            holder.joinGameButton.visibility = View.GONE
-        }
+        holder.bind(messages[position], currentUserId)
     }
 
-    override fun getItemCount() = messages.size
+    override fun getItemCount(): Int = messages.size
 
     fun updateMessages(newMessages: List<Message>) {
-        messages = newMessages.sortedBy { it.timestamp }
+        messages = newMessages
         notifyDataSetChanged()
     }
 
-    fun addMessage(message: Message) {
-        messages = messages + message
-        messages = messages.sortedBy { it.timestamp }
-        notifyDataSetChanged()
+    class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val sentMessageText: TextView = itemView.findViewById(R.id.sentMessageText)
+        private val receivedMessageText: TextView = itemView.findViewById(R.id.receivedMessageText)
+
+        fun bind(message: Message, currentUserId: String) {
+            val isSent = message.senderId == currentUserId
+
+            if (isSent) {
+                sentMessageText.visibility = View.VISIBLE
+                receivedMessageText.visibility = View.GONE
+                sentMessageText.text = message.text
+            } else {
+                sentMessageText.visibility = View.GONE
+                receivedMessageText.visibility = View.VISIBLE
+                receivedMessageText.text = message.text
+            }
+        }
     }
 }

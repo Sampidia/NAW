@@ -33,6 +33,8 @@ class MainMenuActivity : AppCompatActivity() {
         val appLogo = findViewById<ImageView>(R.id.appLogo)
         Glide.with(this).load(R.raw.logo_animate).into(appLogo)
 
+        // Initialize and start background music
+        BackgroundMusicManager.initialize(this)
         Handler().postDelayed({ BackgroundMusicManager.startBackgroundMusic() }, 1000)
 
         findViewById<Button>(R.id.singlePlayerButton).setOnClickListener {

@@ -48,6 +48,17 @@
                 ".read": "auth != null",
                 ".write": "auth != null && $uid === auth.uid"
             }
+        },
+        "chats": {
+            "$chatId": {
+                ".read": "auth != null && $chatId.contains(auth.uid)",
+                ".write": "auth != null && $chatId.contains(auth.uid)",
+                "messages": {
+                    "$messageId": {
+                        ".validate": "newData.hasChildren(['id', 'text', 'senderId', 'timestamp']) && newData.child('senderId').val() === auth.uid"
+                    }
+                }
+            }
         }
     }
 }

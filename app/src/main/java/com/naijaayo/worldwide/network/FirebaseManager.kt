@@ -26,6 +26,7 @@ object FirebaseManager {
     private val matchmakingPoolRef = realtimeDatabase.getReference("matchmaking_pool")
     internal val gamesRef = realtimeDatabase.getReference("games")
     private val savedGamesRef = realtimeDatabase.getReference("saved_games")
+    private val chatsRef = realtimeDatabase.getReference("chats")
     private val usersRef = firestore.collection("users")
 
     private var onDisconnectHandler: OnDisconnect? = null
@@ -320,19 +321,89 @@ object FirebaseManager {
     // --- New, Specific Leaderboard Logic ---
 
     suspend fun getSinglePlayerLeaderboard(): List<LeaderboardEntry> {
-        return getLeaderboardFromCollection("leaderboard_sp")
+        return try {
+            val snapshot = firestore.collection("users")
+                .get()
+                .await()
+            
+            val entries = mutableListOf<LeaderboardEntry>()
+            for (doc in snapshot.documents) {
+                val stats = doc.get("stats") as? Map<String, Any> ?: continue
+                val spStats = stats["singlePlayer"] as? Map<String, Any> ?: continue
+                
+                val wins = (spStats["wins"] as? Long) ?: 0L
+                val losses = (spStats["losses"] as? Long) ?: 0L
+                val draws = (spStats["draws"] as? Long) ?: 0L
+                val totalPoints = (spStats["totalPoints"] as? Long) ?: 0L
+                
+                // Skip users with no games played
+                if (wins + losses + draws == 0L) continue
+                
+                entries.add(LeaderboardEntry(
+                    id = doc.id,
+                    displayName = doc.getString("displayName") ?: doc.getString("username") ?: "Unknown",
+                    username = doc.getString("username") ?: "",
+                    avatarId = doc.getString("avatarId") ?: "ayo",
+                    totalPoints = totalPoints,
+                    wins = wins,
+                    losses = losses,
+                    draws = draws
+                ))
+            }
+            
+            // Sort by totalPoints descending
+            entries.sortedByDescending { it.totalPoints }
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error fetching SP leaderboard", e)
+            emptyList()
+        }
     }
 
     suspend fun getMultiplayerLeaderboard(): List<LeaderboardEntry> {
-        return getLeaderboardFromCollection("leaderboard_mp")
+        return try {
+            val snapshot = firestore.collection("users")
+                .get()
+                .await()
+            
+            val entries = mutableListOf<LeaderboardEntry>()
+            for (doc in snapshot.documents) {
+                val stats = doc.get("stats") as? Map<String, Any> ?: continue
+                val mpStats = stats["multiplayer"] as? Map<String, Any> ?: continue
+                
+                val wins = (mpStats["wins"] as? Long) ?: 0L
+                val losses = (mpStats["losses"] as? Long) ?: 0L
+                val draws = (mpStats["draws"] as? Long) ?: 0L
+                val totalPoints = (mpStats["totalPoints"] as? Long) ?: 0L
+                
+                // Skip users with no games played
+                if (wins + losses + draws == 0L) continue
+                
+                entries.add(LeaderboardEntry(
+                    id = doc.id,
+                    displayName = doc.getString("displayName") ?: doc.getString("username") ?: "Unknown",
+                    username = doc.getString("username") ?: "",
+                    avatarId = doc.getString("avatarId") ?: "ayo",
+                    totalPoints = totalPoints,
+                    wins = wins,
+                    losses = losses,
+                    draws = draws
+                ))
+            }
+            
+            // Sort by totalPoints descending
+            entries.sortedByDescending { it.totalPoints }
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error fetching MP leaderboard", e)
+            emptyList()
+        }
     }
 
     suspend fun updateSinglePlayerScore(scoreToAdd: Long, displayName: String, avatarId: String) {
-        updateScoreInCollection("leaderboard_sp", scoreToAdd, displayName, avatarId)
+        // This is now handled by recordSinglePlayerResult
     }
 
     suspend fun updateMultiplayerScore(scoreToAdd: Long, displayName: String, avatarId: String) {
-        updateScoreInCollection("leaderboard_mp", scoreToAdd, displayName, avatarId)
+        // This is now handled by recordMultiplayerResult
     }
     // --- NetworkGame Statistics Tracking ---
     enum class MatchResult {
@@ -464,7 +535,11 @@ object FirebaseManager {
                 val currentScore = snapshot.getLong("score") ?: 0L
                 val newScore = currentScore + scoreToAdd
 
-                val entry = LeaderboardEntry(displayName, newScore, avatarId)
+                val entry = mapOf(
+                    "displayName" to displayName,
+                    "score" to newScore,
+                    "avatarId" to avatarId
+                )
                 transaction.set(userDocRef, entry)
                 null // Transactions must return null
             }.await()
@@ -621,9 +696,22 @@ object FirebaseManager {
         val currentUser = auth.currentUser ?: return false
         val fromUid = currentUser.uid
 
-        // Check if already friends or request pending (optional but good)
-        // For simplicity, just create the request
-        
+        // Check if a friend request from this user already exists
+        try {
+            val existingRequests = usersRef.document(toUser.id)
+                .collection("friend_requests")
+                .whereEqualTo("fromUid", fromUid)
+                .whereEqualTo("status", "pending")
+                .get()
+                .await()
+            
+            if (!existingRequests.isEmpty) {
+                android.util.Log.d("FirebaseManager", "Friend request already sent to ${toUser.username}")
+                return false // Request already exists
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error checking existing requests", e)
+        }
         
         // Get current user profile for the request
         val myProfile = getUserProfile(fromUid) ?: return false
@@ -745,5 +833,93 @@ object FirebaseManager {
                     onFriendsUpdated(friends)
                 }
             }
+    }
+
+    // --- Chat System ---
+
+    /**
+     * Generates a consistent chat ID for two users by sorting their UIDs.
+     * This ensures the same chat room is used regardless of who initiates.
+     */
+    fun getChatId(uid1: String, uid2: String): String {
+        return if (uid1 < uid2) "${uid1}_${uid2}" else "${uid2}_${uid1}"
+    }
+
+    /**
+     * Sends a message to a chat with a friend.
+     */
+    suspend fun sendMessage(friendId: String, text: String): Boolean {
+        val currentUid = auth.currentUser?.uid ?: return false
+        if (text.isBlank()) return false
+
+        return try {
+            val chatId = getChatId(currentUid, friendId)
+            val messageRef = chatsRef.child(chatId).child("messages").push()
+            val messageId = messageRef.key ?: return false
+
+            val message = mapOf(
+                "id" to messageId,
+                "text" to text.trim(),
+                "senderId" to currentUid,
+                "timestamp" to System.currentTimeMillis()
+            )
+
+            messageRef.setValue(message).await()
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error sending message", e)
+            false
+        }
+    }
+
+    /**
+     * Listens for messages in a chat with a friend in real-time.
+     */
+    fun listenForMessages(
+        friendId: String,
+        onMessagesUpdated: (List<com.naijaayo.worldwide.model.Message>) -> Unit
+    ): ValueEventListener {
+        val currentUid = auth.currentUser?.uid ?: ""
+        val chatId = getChatId(currentUid, friendId)
+
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val messages = mutableListOf<com.naijaayo.worldwide.model.Message>()
+                for (child in snapshot.children) {
+                    val id = child.child("id").getValue(String::class.java) ?: ""
+                    val text = child.child("text").getValue(String::class.java) ?: ""
+                    val senderId = child.child("senderId").getValue(String::class.java) ?: ""
+                    val timestamp = child.child("timestamp").getValue(Long::class.java) ?: 0L
+
+                    messages.add(
+                        com.naijaayo.worldwide.model.Message(
+                            id = id,
+                            text = text,
+                            senderId = senderId,
+                            timestamp = timestamp
+                        )
+                    )
+                }
+                // Sort by timestamp ascending
+                messages.sortBy { it.timestamp }
+                onMessagesUpdated(messages)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                android.util.Log.e("FirebaseManager", "Messages listen cancelled", error.toException())
+            }
+        }
+
+        chatsRef.child(chatId).child("messages").addValueEventListener(listener)
+        return listener
+    }
+
+    /**
+     * Removes a messages listener.
+     */
+    fun removeMessagesListener(listener: ValueEventListener, friendId: String) {
+        val currentUid = auth.currentUser?.uid ?: return
+        val chatId = getChatId(currentUid, friendId)
+        chatsRef.child(chatId).child("messages").removeEventListener(listener)
     }
 }
