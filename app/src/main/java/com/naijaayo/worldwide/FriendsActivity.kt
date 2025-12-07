@@ -8,6 +8,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import com.naijaayo.worldwide.network.FirebaseManager
 
 class FriendsActivity : AppCompatActivity() {
 
@@ -42,6 +43,22 @@ class FriendsActivity : AppCompatActivity() {
         fabSearchUser.setOnClickListener {
             val dialog = SearchFriendsDialog()
             dialog.show(supportFragmentManager, "SearchFriendsDialog")
+        }
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Keep user online while viewing friends
+        if (FirebaseManager.auth.currentUser != null) {
+            FirebaseManager.setUserOnline()
+        }
+    }
+    
+    override fun onStop() {
+        super.onStop()
+        // Set user as offline when they leave this activity
+        if (FirebaseManager.auth.currentUser != null) {
+            FirebaseManager.setUserOffline()
         }
     }
 }

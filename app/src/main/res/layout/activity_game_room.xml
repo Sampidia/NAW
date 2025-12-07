@@ -18,6 +18,16 @@
         android:elevation="4dp"
         app:layout_constraintTop_toTopOf="parent">
 
+        <ImageView
+            android:id="@+id/backButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/exit_icon"
+            android:layout_gravity="center_vertical"
+            android:padding="8dp"
+            android:layout_marginEnd="8dp"
+            app:tint="#5D4037" />
+
         <EditText
             android:id="@+id/searchRoomInput"
             android:layout_width="0dp"
@@ -42,37 +52,23 @@
 
     </LinearLayout>
 
-    <!-- Action Buttons: Create Lobby & Resume Game -->
+    <!-- Action Buttons: Create Lobby -->
     <LinearLayout
         android:id="@+id/actionButtonsLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp"
-        android:weightSum="2"
         app:layout_constraintTop_toBottomOf="@id/topBar">
 
         <Button
             android:id="@+id/createRoomButton"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:layout_weight="1"
             android:text="CREATE LOBBY"
             android:textStyle="bold"
             android:backgroundTint="#5D4037"
-            android:textColor="#FFFFFF"
-            android:layout_marginEnd="8dp" />
-
-        <Button
-            android:id="@+id/resumeGameButton"
-            android:layout_width="0dp"
-            android:layout_height="60dp"
-            android:layout_weight="1"
-            android:text="RESUME GAME"
-            android:textStyle="bold"
-            android:backgroundTint="#5D4037"
-            android:textColor="#FFFFFF"
-            android:layout_marginStart="8dp" />
+            android:textColor="#FFFFFF" />
 
     </LinearLayout>
 

@@ -11,6 +11,9 @@ import com.naijaayo.worldwide.model.Friend
 import com.naijaayo.worldwide.model.FriendRequest
 import com.naijaayo.worldwide.model.User
 import kotlinx.coroutines.tasks.await
+import com.naijaayo.worldwide.PlayNowGame
+import com.naijaayo.worldwide.PlayNowGameState
+import com.naijaayo.worldwide.PlayNowPlayer
 
 
 
@@ -32,44 +35,152 @@ object FirebaseManager {
     private var onDisconnectHandler: OnDisconnect? = null
 
     // --- Session Management ---
-    suspend fun joinGameSession(): Boolean { /* ... implementation from before ... */ return false }
-    fun leaveGameSession() { /* ... */ }
+    // Removed session limit - no longer required
 
     // --- "Play Now" - Matchmaking ---
-    suspend fun findMatch(player: Player) { /* ... */ }
-    fun listenForGameMatch(uid: String, onMatchFound: (gameId: String) -> Unit): ValueEventListener { 
-        /* ... */ 
-        return gamesRef.addValueEventListener(object: ValueEventListener{ 
-            override fun onDataChange(snapshot: DataSnapshot) {} 
-            override fun onCancelled(error: DatabaseError) {}
-        }) 
+    
+    // Result of joining matchmaking queue
+    sealed class MatchResult {
+        data class Matched(val roomId: String, val roomCode: String) : MatchResult()
+        data class Waiting(val roomId: String, val roomCode: String) : MatchResult()
+        data class Error(val message: String) : MatchResult()
     }
-    fun cancelMatchmaking(uid: String) { /* ... */ }
+    
+    /**
+     * Join the matchmaking queue. If another player is waiting, pair with them.
+     * Otherwise, add self to queue and wait.
+     */
+    suspend fun joinMatchmakingQueue(player: PlayNowPlayer): MatchResult {
+        return try {
+            // 1. Search for an existing public waiting game
+            val snapshot = gamesRef.orderByChild("status").equalTo("waiting").get().await()
+            
+            var matchedRoomId: String? = null
+            var matchedRoomCode: String? = null
+            
+            if (snapshot.exists()) {
+                for (child in snapshot.children) {
+                    val game = parsePlayNowGame(child)
+                    // Filter out games created by self, ensure it's public, has space, AND is a MATCHMAKING game
+                    if (game != null && !game.isPrivate && game.players.size < 2 && game.creatorUid != player.uid && game.gameType == "MATCHMAKING") {
+                        // Found a suitable game, try to join
+                        val joined = joinPrivateRoom(game.roomId!!, player)
+                        if (joined) {
+                            matchedRoomId = game.roomId
+                            matchedRoomCode = game.roomCode
+                            
+                            // CRITICAL: Automatically start the game for Play Now
+                            // Initialize game state
+                            val initialGameState = PlayNowGameState(
+                                board = List(12) { 4 },
+                                nextPlayerUid = game.creatorUid, // Creator starts first
+                                winnerUid = null,
+                                gameOver = false
+                            )
+                            
+                            val roomRef = gamesRef.child(matchedRoomId!!)
+                            roomRef.child("status").setValue("playing").await()
+                            roomRef.child("gameState").setValue(initialGameState).await()
+                            
+                            break
+                        }
+                    }
+                }
+            }
+            
+            if (matchedRoomId != null && matchedRoomCode != null) {
+                return MatchResult.Matched(matchedRoomId, matchedRoomCode)
+            }
+            
+            // 2. No suitable game found, create a new public game
+            val roomCode = (100000..999999).random().toString()
+            val roomId = (100000..999999).random().toString()
+            
+            val game = PlayNowGame(
+                roomId = roomId,
+                roomCode = roomCode,
+                creatorUid = player.uid,
+                players = mapOf(
+                    (player.uid ?: "") to player
+                ),
+                status = "waiting",
+                isPrivate = false, // Public game
+                level = "EASY",
+                gameType = "MATCHMAKING"
+            )
+            
+            gamesRef.child(roomId).setValue(game).await()
+            
+            // IMPORTANT: Return Waiting so Player 1 waits in dialog
+            return MatchResult.Waiting(roomId, roomCode)
+            
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Matchmaking error", e)
+            MatchResult.Error(e.message ?: "Unknown error")
+        }
+    }
+    
+    /**
+     * Listen for when another player matches with this player (for Player 1 waiting)
+     */
+    fun listenForMatch(roomId: String, onMatchFound: (roomId: String, roomCode: String) -> Unit): ValueEventListener {
+        return gamesRef.child(roomId).addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val game = parsePlayNowGame(snapshot)
+                    if (game != null && game.players.size >= 2) {
+                        // Match found (someone joined)
+                        onMatchFound(game.roomId ?: "", game.roomCode ?: "")
+                    }
+                }
+                
+                override fun onCancelled(error: DatabaseError) {
+                    android.util.Log.e("FirebaseManager", "Match listener cancelled", error.toException())
+                }
+            })
+    }
+    
+    /**
+     * Leave the matchmaking queue (when user cancels)
+     */
+    fun leaveMatchmakingQueue(uid: String, roomId: String?) {
+        if (roomId != null) {
+            // Remove the game if we were the creator and waiting
+            gamesRef.child(roomId).removeValue()
+        }
+    }
+    
+    // Keep old function names for backward compatibility but mark as deprecated
+    @Deprecated("Use joinMatchmakingQueue instead", ReplaceWith("joinMatchmakingQueue(player)"))
+    suspend fun findMatch(player: PlayNowPlayer) { joinMatchmakingQueue(player) }
+    
+    @Deprecated("Use listenForMatch instead")
+
 
     // --- "Play with Friends" - Room Management ---
-    suspend fun createRoom(player: Player, roomCode: String, level: String = "MEDIUM"): String {
+    suspend fun createRoom(player: PlayNowPlayer, roomCode: String, level: String = "MEDIUM"): String {
         val roomId = (100000..999999).random().toString() // Generate 6-digit ID
-        val NetworkGame = NetworkGame(
+        val game = PlayNowGame(
             roomId = roomId,
             roomCode = roomCode,
             creatorUid = player.uid,
             players = mapOf(player.uid!! to player),
             status = "waiting",
             isPrivate = false, // Public by default now
-            level = level
+            level = level,
+            gameType = "LOBBY"
         )
-        gamesRef.child(roomId).setValue(NetworkGame).await()
+        gamesRef.child(roomId).setValue(game).await()
         return roomId
     }
 
     suspend fun startGame(roomId: String) {
         val roomRef = gamesRef.child(roomId)
         val snapshot = roomRef.get().await()
-        val NetworkGame = snapshot.getValue(NetworkGame::class.java) ?: return
+        val game = parsePlayNowGame(snapshot) ?: return
         
-        // Initialize NetworkGame state with first player's turn
-        val firstPlayerUid = NetworkGame.players.values.firstOrNull()?.uid
-        val initialGameState = GameState(
+        // Initialize PlayNowGame state with first player's turn
+        val firstPlayerUid = game.players.values.firstOrNull()?.uid
+        val initialGameState = PlayNowGameState(
             board = List(12) { 4 },
             nextPlayerUid = firstPlayerUid,
             winnerUid = null,
@@ -80,13 +191,13 @@ object FirebaseManager {
         roomRef.child("gameState").setValue(initialGameState).await()
     }
 
-    suspend fun joinPrivateRoom(roomId: String, player: Player): Boolean {
+    suspend fun joinPrivateRoom(roomId: String, player: PlayNowPlayer): Boolean {
         return try {
             val roomRef = gamesRef.child(roomId)
             val snapshot = roomRef.get().await()
-            val NetworkGame = snapshot.getValue(NetworkGame::class.java)
+            val game = parsePlayNowGame(snapshot)
             
-            if (NetworkGame != null && NetworkGame.status == "waiting" && NetworkGame.players.size < 2) {
+            if (game != null && game.status == "waiting" && game.players.size < 2) {
                 roomRef.child("players").child(player.uid!!).setValue(player).await()
                 true
             } else {
@@ -112,15 +223,15 @@ object FirebaseManager {
     }
 
 
-    fun listenForPublicRooms(onRoomsUpdated: (rooms: List<NetworkGame>) -> Unit): ValueEventListener {
+    fun listenForPublicRooms(onRoomsUpdated: (rooms: List<PlayNowGame>) -> Unit): ValueEventListener {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val rooms = mutableListOf<NetworkGame>()
+                val rooms = mutableListOf<PlayNowGame>()
                 for (child in snapshot.children) {
-                    val NetworkGame = child.getValue(NetworkGame::class.java)
+                    val game = parsePlayNowGame(child)
                     // Show all rooms that are waiting, regardless of private flag (since we want to see created rooms)
-                    if (NetworkGame != null && NetworkGame.status == "waiting") {
-                        rooms.add(NetworkGame)
+                    if (game != null && game.status == "waiting") {
+                        rooms.add(game)
                     }
                 }
                 onRoomsUpdated(rooms)
@@ -131,13 +242,13 @@ object FirebaseManager {
         return listener
     }
 
-    // --- In-NetworkGame Logic ---
-    fun listenForGameStateUpdates(roomId: String, onUpdate: (NetworkGame: NetworkGame) -> Unit): ValueEventListener {
+    // --- In-Game Logic ---
+    fun listenForGameStateUpdates(roomId: String, onUpdate: (game: PlayNowGame) -> Unit): ValueEventListener {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val NetworkGame = snapshot.getValue(NetworkGame::class.java)
-                if (NetworkGame != null) {
-                    onUpdate(NetworkGame)
+                val game = parsePlayNowGame(snapshot)
+                if (game != null) {
+                    onUpdate(game)
                 }
             }
             override fun onCancelled(error: DatabaseError) {}
@@ -150,34 +261,43 @@ object FirebaseManager {
         try {
             val roomRef = gamesRef.child(roomId)
             val snapshot = roomRef.get().await()
-            val NetworkGame = snapshot.getValue(NetworkGame::class.java) ?: return
+            val game = parsePlayNowGame(snapshot) ?: return
             
             // Get current user
             val currentUid = auth.currentUser?.uid ?: return
             
             // Verify it's the player's turn
-            if (NetworkGame.gameState.nextPlayerUid != currentUid) {
+            if (game.gameState.nextPlayerUid != currentUid) {
                 android.util.Log.w("FirebaseManager", "Not player's turn")
                 return
             }
             
             // Convert Firebase GameState to Local GameState
-            val level = when (NetworkGame.level) {
+            val level = when (game.level) {
                 "EASY" -> com.naijaayo.worldwide.GameLevel.EASY
                 "HARD" -> com.naijaayo.worldwide.GameLevel.HARD
                 else -> com.naijaayo.worldwide.GameLevel.MEDIUM
             }
             
-            // Determine player number (1 or 2)
-            val playersList = NetworkGame.players.values.toList()
-            val playerNumber = if (playersList.getOrNull(0)?.uid == currentUid) 1 else 2
+            // Determine player number STABLY using creatorUid
+            val player1Uid = game.creatorUid
+            val player2Uid = game.players.keys.find { it != player1Uid }
+            
+            android.util.Log.d("FirebaseManager", "makeMove: P1(Creator)=$player1Uid, P2=$player2Uid, Current=$currentUid")
+            
+            if (player1Uid == null || player2Uid == null) {
+                android.util.Log.e("FirebaseManager", "makeMove: CRITICAL - One or both player UIDs are null! P1=$player1Uid, P2=$player2Uid")
+                return
+            }
+            
+            val playerNumber = if (currentUid == player1Uid) 1 else 2
             
             val localGameState = com.naijaayo.worldwide.LocalGameState(
-                pits = NetworkGame.gameState.board.toIntArray(),
-                player1Score = NetworkGame.gameState.player1Score, // Use existing scores from Firebase
-                player2Score = NetworkGame.gameState.player2Score,
+                pits = game.gameState.board.toIntArray(),
+                player1Score = game.gameState.player1Score, // Use existing scores from Firebase
+                player2Score = game.gameState.player2Score,
                 currentPlayer = playerNumber,
-                gameOver = NetworkGame.gameState.gameOver,
+                gameOver = game.gameState.gameOver,
                 level = level
             )
             
@@ -198,20 +318,20 @@ object FirebaseManager {
             
             // Determine next player
             val nextPlayerUid = if (newLocalState!!.currentPlayer == 1) {
-                (playersList.getOrNull(0) as? Player)?.uid
+                player1Uid
             } else {
-                (playersList.getOrNull(1) as? Player)?.uid
+                player2Uid
             }
             
             // Convert back to Firebase GameState
-            val newFirebaseState = GameState(
+            val newFirebaseState = PlayNowGameState(
                 board = newLocalState!!.pits.toList(),
                 nextPlayerUid = nextPlayerUid,
                 winnerUid = if (newLocalState!!.gameOver) {
                     when (newLocalState!!.winner) {
-                        1 -> (playersList.getOrNull(0) as? Player)?.uid
-                        2 -> (playersList.getOrNull(1) as? Player)?.uid
-                        else -> null
+                        1 -> player1Uid
+                        2 -> player2Uid
+                        else -> null // Draw
                     }
                 } else null,
                 gameOver = newLocalState!!.gameOver,
@@ -236,7 +356,7 @@ object FirebaseManager {
     fun saveGame(roomCode: String, onComplete: (Boolean, String) -> Unit) {
         // 1. Fetch current game state from 'games/{roomCode}'
         gamesRef.child(roomCode).get().addOnSuccessListener { snapshot ->
-            val game = snapshot.getValue(NetworkGame::class.java)
+            val game = parsePlayNowGame(snapshot)
             if (game != null) {
                 // 2. Save to 'saved_games/{roomCode}'
                 savedGamesRef.child(roomCode).setValue(game).addOnSuccessListener {
@@ -275,32 +395,56 @@ object FirebaseManager {
         }
     }
 
-    suspend fun resumeGame(roomCode: String): Boolean {
+    suspend fun resumeGame(roomCode: String): MatchResult {
         return try {
             // 1. Check if active game exists
             val activeGameSnapshot = gamesRef.child(roomCode).get().await()
             if (activeGameSnapshot.exists()) {
-                // Game is already active, just join it
-                return true
+                val game = parsePlayNowGame(activeGameSnapshot)
+                if (game != null) {
+                    if (game.status == "waiting_resume") {
+                        // Game is waiting for second player -> Set to playing
+                        gamesRef.child(roomCode).child("status").setValue("playing").await()
+                        return MatchResult.Matched(game.roomId ?: roomCode, roomCode)
+                    } else if (game.status == "playing") {
+                        // Game already playing -> Join
+                        return MatchResult.Matched(game.roomId ?: roomCode, roomCode)
+                    }
+                }
             }
 
             // 2. If not active, fetch from saved_games
             val savedGameSnapshot = savedGamesRef.child(roomCode).get().await()
-            val savedGame = savedGameSnapshot.getValue(NetworkGame::class.java)
+            val savedGame = parsePlayNowGame(savedGameSnapshot)
 
             if (savedGame != null) {
                 // 3. Rehydrate: Write back to 'games/{roomCode}'
-                // Set status to 'playing' just in case it was 'waiting' or something else
-                val rehydratedGame = savedGame.copy(status = "playing")
+                // Set status to 'waiting_resume' so first player waits
+                val rehydratedGame = savedGame.copy(status = "waiting_resume")
                 gamesRef.child(roomCode).setValue(rehydratedGame).await()
-                return true
+                return MatchResult.Waiting(rehydratedGame.roomId ?: roomCode, roomCode)
             } else {
-                return false // Saved game not found
+                return MatchResult.Error("Saved game not found")
             }
         } catch (e: Exception) {
             android.util.Log.e("FirebaseManager", "Error resuming game", e)
-            return false
+            return MatchResult.Error(e.message ?: "Unknown error")
         }
+    }
+
+    fun listenForResume(roomCode: String, onResume: () -> Unit): ValueEventListener {
+        return gamesRef.child(roomCode).child("status").addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val status = snapshot.getValue(String::class.java)
+                if (status == "playing") {
+                    onResume()
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                android.util.Log.e("FirebaseManager", "Resume listener cancelled", error.toException())
+            }
+        })
     }
 
     suspend fun getSavedGames(): List<Map<String, Any>> {
@@ -406,13 +550,13 @@ object FirebaseManager {
         // This is now handled by recordMultiplayerResult
     }
     // --- NetworkGame Statistics Tracking ---
-    enum class MatchResult {
+    enum class GameResult {
         WIN, LOSS, DRAW
     }
 
     suspend fun recordSinglePlayerResult(
         userId: String,
-        result: MatchResult,
+        result: GameResult,
         displayName: String,
         avatarId: String
     ) {
@@ -429,14 +573,14 @@ object FirebaseManager {
             val totalPoints = (singlePlayerStats["totalPoints"] as? Long) ?: 0L
             
             when (result) {
-                MatchResult.WIN -> {
+                GameResult.WIN -> {
                     singlePlayerStats["wins"] = wins + 1
                     singlePlayerStats["totalPoints"] = totalPoints + 3
                 }
-                MatchResult.LOSS -> {
+                GameResult.LOSS -> {
                     singlePlayerStats["losses"] = losses + 1
                 }
-                MatchResult.DRAW -> {
+                GameResult.DRAW -> {
                     singlePlayerStats["draws"] = draws + 1
                     singlePlayerStats["totalPoints"] = totalPoints + 1
                 }
@@ -450,34 +594,21 @@ object FirebaseManager {
         }.await()
     }
 
-    suspend fun recordMultiplayerResult(
-        player1Id: String,
-        player2Id: String,
-        winnerId: String?, // null for draw
-        player1Name: String,
-        player2Name: String,
-        player1Avatar: String,
-        player2Avatar: String
-    ) {
-        // Determine results for both players
-        val player1Result = when {
-            winnerId == null -> MatchResult.DRAW
-            winnerId == player1Id -> MatchResult.WIN
-            else -> MatchResult.LOSS
+    suspend fun recordMultiplayerResultForSelf(gameId: String, winnerId: String?) {
+        val currentUid = auth.currentUser?.uid ?: return
+        
+        // Determine result for SELF
+        val result = when {
+            winnerId == null -> GameResult.DRAW
+            winnerId == currentUid -> GameResult.WIN
+            else -> GameResult.LOSS
         }
         
-        val player2Result = when {
-            winnerId == null -> MatchResult.DRAW
-            winnerId == player2Id -> MatchResult.WIN
-            else -> MatchResult.LOSS
-        }
-        
-        // Update both players' stats
-        updatePlayerMultiplayerStats(player1Id, player1Result)
-        updatePlayerMultiplayerStats(player2Id, player2Result)
+        // Update ONLY my stats
+        updatePlayerMultiplayerStats(currentUid, gameId, result)
     }
     
-    private suspend fun updatePlayerMultiplayerStats(userId: String, result: MatchResult) {
+    private suspend fun updatePlayerMultiplayerStats(userId: String, gameId: String, result: GameResult) {
         val userDocRef = firestore.collection("users").document(userId)
         
         firestore.runTransaction { transaction ->
@@ -485,24 +616,35 @@ object FirebaseManager {
             val stats = snapshot.get("stats") as? Map<String, Any> ?: emptyMap()
             val multiplayerStats = stats["multiplayer"] as? MutableMap<String, Any> ?: mutableMapOf()
             
+            // IDEMPOTENCY CHECK:
+            // Check if this game was already recorded to prevent double counting
+            val lastRecordedGameId = multiplayerStats["lastGameId"] as? String
+            if (lastRecordedGameId == gameId) {
+                // Already recorded, skip update
+                return@runTransaction null
+            }
+            
             val wins = (multiplayerStats["wins"] as? Long) ?: 0L
             val losses = (multiplayerStats["losses"] as? Long) ?: 0L
             val draws = (multiplayerStats["draws"] as? Long) ?: 0L
             val totalPoints = (multiplayerStats["totalPoints"] as? Long) ?: 0L
             
             when (result) {
-                MatchResult.WIN -> {
+                GameResult.WIN -> {
                     multiplayerStats["wins"] = wins + 1
                     multiplayerStats["totalPoints"] = totalPoints + 3
                 }
-                MatchResult.LOSS -> {
+                GameResult.LOSS -> {
                     multiplayerStats["losses"] = losses + 1
                 }
-                MatchResult.DRAW -> {
+                GameResult.DRAW -> {
                     multiplayerStats["draws"] = draws + 1
                     multiplayerStats["totalPoints"] = totalPoints + 1
                 }
             }
+            
+            // Save the game ID to prevent future duplicates
+            multiplayerStats["lastGameId"] = gameId
             
             val updatedStats = stats.toMutableMap()
             updatedStats["multiplayer"] = multiplayerStats
@@ -890,13 +1032,25 @@ object FirebaseManager {
                     val text = child.child("text").getValue(String::class.java) ?: ""
                     val senderId = child.child("senderId").getValue(String::class.java) ?: ""
                     val timestamp = child.child("timestamp").getValue(Long::class.java) ?: 0L
+                    
+                    // Game invite fields
+                    val isGameInvite = child.child("isGameInvite").getValue(Boolean::class.java) ?: false
+                    val roomId = child.child("roomId").getValue(String::class.java) ?: ""
+                    val roomCode = child.child("roomCode").getValue(String::class.java) ?: ""
+                    val gameLevel = child.child("gameLevel").getValue(String::class.java) ?: ""
+                    val inviterUsername = child.child("inviterUsername").getValue(String::class.java) ?: ""
 
                     messages.add(
                         com.naijaayo.worldwide.model.Message(
                             id = id,
                             text = text,
                             senderId = senderId,
-                            timestamp = timestamp
+                            timestamp = timestamp,
+                            isGameInvite = isGameInvite,
+                            roomId = roomId,
+                            roomCode = roomCode,
+                            gameLevel = gameLevel,
+                            inviterUsername = inviterUsername
                         )
                     )
                 }
@@ -921,5 +1075,169 @@ object FirebaseManager {
         val currentUid = auth.currentUser?.uid ?: return
         val chatId = getChatId(currentUid, friendId)
         chatsRef.child(chatId).child("messages").removeEventListener(listener)
+    }
+
+    /**
+     * Sends a game invite message to a friend's chat.
+     */
+    suspend fun sendGameInvite(
+        friendId: String,
+        roomId: String,
+        roomCode: String,
+        gameLevel: String,
+        inviterUsername: String
+    ): Boolean {
+        val currentUid = auth.currentUser?.uid ?: return false
+
+        return try {
+            val chatId = getChatId(currentUid, friendId)
+            val messageRef = chatsRef.child(chatId).child("messages").push()
+            val messageId = messageRef.key ?: return false
+
+            val levelText = when (gameLevel) {
+                "EASY" -> "easy"
+                "HARD" -> "hard"
+                else -> "medium"
+            }
+
+            val message = mapOf(
+                "id" to messageId,
+                "text" to "$inviterUsername invites you for a $levelText game:",
+                "senderId" to currentUid,
+                "timestamp" to System.currentTimeMillis(),
+                "isGameInvite" to true,
+                "roomId" to roomId,
+                "roomCode" to roomCode,
+                "gameLevel" to gameLevel,
+                "inviterUsername" to inviterUsername
+            )
+
+            messageRef.setValue(message).await()
+            android.util.Log.d("FirebaseManager", "Game invite sent to $friendId for room $roomCode")
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error sending game invite", e)
+            false
+        }
+    }
+
+    // --- User Online Status ---
+    
+    /**
+     * Set current user as online in Firebase Realtime Database
+     */
+    fun setUserOnline() {
+        val uid = auth.currentUser?.uid ?: return
+        val userStatusRef = onlineUsersRef.child(uid)
+        
+        // Set user as online with timestamp
+        userStatusRef.setValue(mapOf(
+            "online" to true,
+            "lastSeen" to ServerValue.TIMESTAMP
+        ))
+        
+        // Setup onDisconnect to automatically set offline when user disconnects
+        onDisconnectHandler = userStatusRef.onDisconnect()
+        onDisconnectHandler?.setValue(mapOf(
+            "online" to false,
+            "lastSeen" to ServerValue.TIMESTAMP
+        ))
+    }
+    
+    /**
+     * Set current user as offline in Firebase Realtime Database
+     */
+    fun setUserOffline() {
+        val uid = auth.currentUser?.uid ?: return
+        val userStatusRef = onlineUsersRef.child(uid)
+        
+        userStatusRef.setValue(mapOf(
+            "online" to false,
+            "lastSeen" to ServerValue.TIMESTAMP
+        ))
+        
+        // Cancel the onDisconnect handler
+        onDisconnectHandler?.cancel()
+        onDisconnectHandler = null
+    }
+    
+    /**
+     * Listen for a specific user's online status
+     * @return ValueEventListener that should be removed when no longer needed
+     */
+    fun listenToUserOnlineStatus(uid: String, onStatusChanged: (isOnline: Boolean) -> Unit): ValueEventListener {
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val isOnline = snapshot.child("online").getValue(Boolean::class.java) ?: false
+                onStatusChanged(isOnline)
+            }
+            
+            override fun onCancelled(error: DatabaseError) {
+                android.util.Log.e("FirebaseManager", "Error listening to online status", error.toException())
+                onStatusChanged(false)
+            }
+        }
+        
+        onlineUsersRef.child(uid).addValueEventListener(listener)
+        return listener
+    }
+    
+    /**
+     * Remove an online status listener
+     */
+    fun removeOnlineStatusListener(uid: String, listener: ValueEventListener) {
+        onlineUsersRef.child(uid).removeEventListener(listener)
+    }
+}
+
+// Helper for manual parsing to avoid ClassMapper private field issues
+fun parsePlayNowGame(snapshot: com.google.firebase.database.DataSnapshot): PlayNowGame? {
+    if (!snapshot.exists()) return null
+    return try {
+        val roomId = snapshot.child("roomId").getValue(String::class.java)
+        val roomCode = snapshot.child("roomCode").getValue(String::class.java)
+        val creatorUid = snapshot.child("creatorUid").getValue(String::class.java)
+        val status = snapshot.child("status").getValue(String::class.java) ?: "waiting"
+        val level = snapshot.child("level").getValue(String::class.java) ?: "MEDIUM"
+        val gameType = snapshot.child("gameType").getValue(String::class.java) ?: "LOBBY"
+        val navigationAction = snapshot.child("navigationAction").getValue(String::class.java)
+        
+        // Handle 'private' field name mismatch (Firebase 'private' vs Kotlin 'isPrivate')
+        val isPrivate = snapshot.child("private").getValue(Boolean::class.java) 
+             ?: snapshot.child("isPrivate").getValue(Boolean::class.java) 
+             ?: false
+        
+        // Players map
+        val playersMap = mutableMapOf<String, PlayNowPlayer>()
+        snapshot.child("players").children.forEach { pSnapshot ->
+            val player = pSnapshot.getValue(PlayNowPlayer::class.java)
+            if (player != null && player.uid != null) {
+                playersMap[player.uid!!] = player
+            }
+        }
+        
+        // GameState
+        val gameStateSnapshot = snapshot.child("gameState")
+        val gameState = if (gameStateSnapshot.exists()) {
+             gameStateSnapshot.getValue(PlayNowGameState::class.java) ?: PlayNowGameState()
+        } else {
+             PlayNowGameState()
+        }
+
+        PlayNowGame(
+            roomId = roomId,
+            roomCode = roomCode,
+            creatorUid = creatorUid,
+            players = playersMap,
+            status = status,
+            isPrivate = isPrivate,
+            level = level,
+            gameType = gameType,
+            gameState = gameState,
+            navigationAction = navigationAction
+        )
+    } catch (e: Exception) {
+        android.util.Log.e("FirebaseManager", "Manual parse failed", e)
+        null
     }
 }

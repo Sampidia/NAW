@@ -65,9 +65,7 @@
         <activity
             android:name=".WaitingRoomActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".ResumeGameActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.NAIJAAYOWORLDWIDE" />
+
 
         <activity android:name=".GameRoomActivity" android:screenOrientation="portrait" />
     </application>

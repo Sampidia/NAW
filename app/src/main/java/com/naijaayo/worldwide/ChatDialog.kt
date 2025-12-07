@@ -1,6 +1,7 @@
 package com.naijaayo.worldwide
 
 import android.app.Dialog
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,13 +11,16 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.database.ValueEventListener
 import com.naijaayo.worldwide.model.Friend
+import com.naijaayo.worldwide.model.Message
 import com.naijaayo.worldwide.network.FirebaseManager
+
 import com.naijaayo.worldwide.theme.AvatarPreferenceManager
 import kotlinx.coroutines.launch
 
@@ -71,8 +75,11 @@ class ChatDialog(private val friend: Friend) : DialogFragment() {
         // Setup header with user info
         setupHeader()
 
-        // Setup RecyclerView
+        // Setup RecyclerView with JOIN button handler
         messageAdapter = MessageAdapter()
+        messageAdapter.setOnJoinClickListener { message ->
+            handleJoinGame(message)
+        }
         messagesRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext()).apply {
                 stackFromEnd = true // Start from bottom
@@ -139,6 +146,55 @@ class ChatDialog(private val friend: Friend) : DialogFragment() {
         }
     }
 
+    private fun handleJoinGame(message: Message) {
+        if (!message.isGameInvite || message.roomId.isEmpty()) {
+            Toast.makeText(requireContext(), "Invalid game invite", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                // Get current user info
+                val currentUid = FirebaseManager.auth.currentUser?.uid
+                if (currentUid == null) {
+                    Toast.makeText(requireContext(), "Please login first", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val profile = FirebaseManager.getUserProfile(currentUid)
+                val displayName = profile?.get("username") as? String ?: "Player"
+                val avatarId = profile?.get("avatarId") as? String ?: "ayo"
+
+                // Create player object
+                val player = PlayNowPlayer(
+                    uid = currentUid,
+                    displayName = displayName,
+                    avatarId = avatarId
+                )
+
+                // Try to join the room
+                val success = FirebaseManager.joinPrivateRoom(message.roomId, player)
+
+                if (success) {
+                    Toast.makeText(requireContext(), "Joined game!", Toast.LENGTH_SHORT).show()
+                    
+                    // Navigate to WaitingRoomActivity
+                    val intent = Intent(requireContext(), WaitingRoomActivity::class.java).apply {
+                        putExtra("ROOM_ID", message.roomId)
+                        putExtra("ROOM_CODE", message.roomCode)
+                    }
+                    startActivity(intent)
+                    dismiss()
+                } else {
+                    Toast.makeText(requireContext(), "Could not join game. Room may be full or closed.", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("ChatDialog", "Error joining game", e)
+                Toast.makeText(requireContext(), "Error joining game", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         // Clean up listener
@@ -157,3 +213,4 @@ class ChatDialog(private val friend: Friend) : DialogFragment() {
         )
     }
 }
+

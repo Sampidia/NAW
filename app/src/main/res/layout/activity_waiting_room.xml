@@ -274,6 +274,54 @@
 
     </LinearLayout>
 
+    <!-- Player VS Player Section -->
+    <LinearLayout
+        android:id="@+id/vsContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/infoBanner"
+        app:layout_constraintBottom_toTopOf="@+id/letsPlayButton">
+
+        <!-- Player 1 Full Avatar -->
+        <ImageView
+            android:id="@+id/player1FullAvatar"
+            android:layout_width="0dp"
+            android:layout_height="180dp"
+            android:layout_weight="1"
+            android:scaleType="fitCenter"
+            android:contentDescription="Player 1 Full Avatar"
+            tools:src="@drawable/char_ayo_full" />
+
+        <!-- VS Text -->
+        <TextView
+            android:id="@+id/vsText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            android:text="VS"
+            android:textColor="#333333"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <!-- Player 2 Full Avatar -->
+        <ImageView
+            android:id="@+id/player2FullAvatar"
+            android:layout_width="0dp"
+            android:layout_height="180dp"
+            android:layout_weight="1"
+            android:scaleType="fitCenter"
+            android:alpha="0.3"
+            android:contentDescription="Player 2 Full Avatar"
+            tools:src="@drawable/char_ada_full" />
+
+    </LinearLayout>
+
     <!-- Let's Play Button -->
     <Button
         android:id="@+id/letsPlayButton"
@@ -292,3 +340,4 @@
         app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+

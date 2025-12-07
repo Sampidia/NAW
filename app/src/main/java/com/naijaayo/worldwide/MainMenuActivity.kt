@@ -10,7 +10,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import com.naijaayo.worldwide.leaderboard.LeaderboardActivity
 import com.naijaayo.worldwide.network.FirebaseManager
-import com.naijaayo.worldwide.network.Player
+
 import com.naijaayo.worldwide.sound.BackgroundMusicManager
 import com.naijaayo.worldwide.theme.NigerianThemeManager
 import kotlinx.coroutines.launch
@@ -91,59 +91,104 @@ class MainMenuActivity : AppCompatActivity() {
 
     private fun startGameNow() {
         lifecycleScope.launch {
-            // Show a "searching" dialog
-            val searchingDialog = AlertDialog.Builder(this@MainMenuActivity)
-                .setTitle("Searching for Opponent...")
-                .setCancelable(false)
-                .setNegativeButton("Cancel") { dialog, _ ->
-                    FirebaseManager.auth.currentUser?.uid?.let { FirebaseManager.cancelMatchmaking(it) }
-                    dialog.dismiss()
-                }
-                .create()
-            searchingDialog.show()
-
-            // 1. Join the general game session to be counted in the 98 users
-            val sessionJoined = FirebaseManager.joinGameSession()
-            if (!sessionJoined) {
-                searchingDialog.dismiss()
-                Toast.makeText(this@MainMenuActivity, "Servers are full, please try again later.", Toast.LENGTH_LONG).show()
+            val currentUser = FirebaseManager.auth.currentUser
+            if (currentUser == null) {
+                Toast.makeText(this@MainMenuActivity, "Please log in first", Toast.LENGTH_SHORT).show()
                 return@launch
             }
 
-            val currentUser = FirebaseManager.auth.currentUser!!
-            // You should fetch the real profile data here
-            val player = Player(uid = currentUser.uid, displayName = currentUser.displayName ?: "Player", avatarId = "ayo")
+            // Fetch user profile for avatar and display name
+            val profile = FirebaseManager.getUserProfile(currentUser.uid)
+            val avatarId = profile?.get("avatarId") as? String ?: "ayo"
+            val displayName = profile?.get("username") as? String 
+                ?: profile?.get("displayName") as? String 
+                ?: currentUser.displayName 
+                ?: "Player"
 
-            // 2. Listen for a match
-            val matchListener = FirebaseManager.listenForGameMatch(currentUser.uid) { gameId ->
-                searchingDialog.dismiss()
-                // Match found! Navigate to the game screen
-                val intent = Intent(this@MainMenuActivity, MainActivity::class.java).apply {
-                    putExtra("GAME_ID", gameId)
-                }
-                startActivity(intent)
-                // Make sure to remove the listener once the match is found
-                FirebaseManager.removeListener(FirebaseManager.listenForGameMatch(currentUser.uid){})
-            }
+            val player = PlayNowPlayer(
+                uid = currentUser.uid, 
+                displayName = displayName, 
+                avatarId = avatarId
+            )
+
+            // Show styled waiting dialog
+            val dialogView = layoutInflater.inflate(R.layout.dialog_matchmaking_waiting, null)
+            val waitingDialog = AlertDialog.Builder(this@MainMenuActivity)
+                .setView(dialogView)
+                .setCancelable(false)
+                .create()
             
-            // 3. Enter the matchmaking pool
-            FirebaseManager.findMatch(player)
+            waitingDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+            waitingDialog.show()
 
-            // Clean up listener if the user cancels
-            searchingDialog.setOnDismissListener {
-                 FirebaseManager.removeListener(matchListener)
+            // Set up cancel button
+            var matchListener: com.google.firebase.database.ValueEventListener? = null
+            var currentRoomId: String? = null
+            
+            dialogView.findViewById<Button>(R.id.cancelButton).setOnClickListener {
+                // Leave queue and dismiss
+                FirebaseManager.leaveMatchmakingQueue(currentUser.uid, currentRoomId)
+                matchListener?.let { FirebaseManager.removeListener(it) }
+                waitingDialog.dismiss()
+            }
+
+            // Try to join matchmaking
+            val result = FirebaseManager.joinMatchmakingQueue(player)
+
+            when (result) {
+                is FirebaseManager.MatchResult.Matched -> {
+                    // Immediately matched with another player
+                    waitingDialog.dismiss()
+                    navigateToGame(result.roomId, result.roomCode)
+                }
+                
+                is FirebaseManager.MatchResult.Waiting -> {
+                    // Waiting for another player - listen for match
+                    currentRoomId = result.roomId
+                    matchListener = FirebaseManager.listenForMatch(result.roomId) { roomId, roomCode ->
+                        waitingDialog.dismiss()
+                        navigateToGame(roomId, roomCode)
+                    }
+                }
+                is FirebaseManager.MatchResult.Error -> {
+                    waitingDialog.dismiss()
+                    Toast.makeText(this@MainMenuActivity, "Matchmaking error: ${result.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
+    }
+
+    private fun navigateToGame(roomId: String, roomCode: String) {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            putExtra("ROOM_ID", roomId)
+            putExtra("ROOM_CODE", roomCode)
+            putExtra("GAME_ID", roomId) // For backward compatibility
+            putExtra("MIC_ENABLED", false) // Default to false for Play Now
+        }
+        startActivity(intent)
     }
 
     override fun onResume() {
         super.onResume()
         NigerianThemeManager.applyThemeToActivity(this)
         BackgroundMusicManager.resumeBackgroundMusic()
+        
+        // Set user as online when they are actively using the app
+        if (FirebaseManager.auth.currentUser != null) {
+            FirebaseManager.setUserOnline()
+        }
     }
 
     override fun onPause() {
         super.onPause()
         BackgroundMusicManager.pauseBackgroundMusic()
+    }
+    
+    override fun onStop() {
+        super.onStop()
+        // Set user as offline when they leave the app or put it in background
+        if (FirebaseManager.auth.currentUser != null) {
+            FirebaseManager.setUserOffline()
+        }
     }
 }

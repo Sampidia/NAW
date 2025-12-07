@@ -19,7 +19,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.naijaayo.worldwide.game.SinglePlayerGameViewModel
 import com.naijaayo.worldwide.network.FirebaseManager
-import com.naijaayo.worldwide.network.NetworkGame
+
 import com.naijaayo.worldwide.sound.BackgroundMusicManager
 import com.naijaayo.worldwide.sound.SoundManager
 import com.naijaayo.worldwide.theme.AvatarPreferenceManager
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
     // Firebase
     private var gameStateListener: ValueEventListener? = null
     private val localGameEngine = com.naijaayo.worldwide.game.LocalGameEngine() // For calculating MP animations
-    private val gameUpdateChannel = kotlinx.coroutines.channels.Channel<NetworkGame>(kotlinx.coroutines.channels.Channel.UNLIMITED)
+    private val gameUpdateChannel = kotlinx.coroutines.channels.Channel<PlayNowGame>(kotlinx.coroutines.channels.Channel.UNLIMITED)
 
     // Single Player ViewModel
     private val singlePlayerViewModel: SinglePlayerGameViewModel by viewModels()
@@ -132,7 +132,8 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             setupMultiplayerMode(gameId!!)
-            setupVoiceChat()
+            val micEnabled = intent.getBooleanExtra("MIC_ENABLED", false)
+            setupVoiceChat(micEnabled)
         }
     }
 
@@ -186,6 +187,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupMultiplayerMode(gameId: String) {
+        // Reset stats flag for new game
+        statsRecorded = false
+
         // Start processing updates
         startUpdateProcessor()
         
@@ -241,7 +245,7 @@ class MainActivity : AppCompatActivity() {
         
         updateProcessorJob = lifecycleScope.launch {
             android.util.Log.d("MPAnimation", "Processor #$processorId running")
-            var currentDisplayedGame: NetworkGame? = null
+            var currentDisplayedGame: PlayNowGame? = null
             
             for (newGame in gameUpdateChannel) {
                 if (currentDisplayedGame == null) {
@@ -294,7 +298,7 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    private fun initializeMultiplayerUI(game: NetworkGame) {
+    private fun initializeMultiplayerUI(game: PlayNowGame) {
         // Called ONCE on initial load - sets up static elements ONLY
         
         // Set up avatars (once - these don't change during game)
@@ -304,7 +308,7 @@ class MainActivity : AppCompatActivity() {
         updateUiForMultiplayer(game)
     }
 
-    private suspend fun detectAndAnimateMultiplayerMove(oldGame: NetworkGame, newGame: NetworkGame): Boolean {
+    private suspend fun detectAndAnimateMultiplayerMove(oldGame: PlayNowGame, newGame: PlayNowGame): Boolean {
         android.util.Log.d("MPAnimation", "=== detectAndAnimateMultiplayerMove called ===")
         
         // CRITICAL: Prevent overlapping animations
@@ -322,7 +326,7 @@ class MainActivity : AppCompatActivity() {
         // Find which pit changed to 0 (the move source)
         // The player who moved is the one whose turn it WAS
         val previousPlayerUid = oldGame.gameState.nextPlayerUid
-        val myPlayerNumber = if (oldGame.players.values.first().uid == selfUid) 1 else 2
+        val myPlayerNumber = if (selfUid == oldGame.creatorUid) 1 else 2
         val wasMyTurn = previousPlayerUid == selfUid
         
         // Determine player number (1 or 2) for the move
@@ -428,7 +432,7 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
-    private suspend fun animateMultiplayerMoveSequence(moveResult: MoveResult, finalGame: NetworkGame) {
+    private suspend fun animateMultiplayerMoveSequence(moveResult: MoveResult, finalGame: PlayNowGame) {
         android.util.Log.d("MPAnimation", ">>> animateMultiplayerMoveSequence started")
         try {
             // Initial delay to let the click sound finish before sowing starts
@@ -477,28 +481,33 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateMultiplayerPitBackgroundsAndTurn(game: NetworkGame) {
+    private fun updateMultiplayerPitBackgroundsAndTurn(game: PlayNowGame) {
         // AFTER-ANIMATION UPDATE - Only updates pit backgrounds and turn state
         // Seeds were already updated by animations - DO NOT touch them!
         
         if (game.gameState.gameOver) {
-            val myPlayerNumber = if (game.players.values.first().uid == selfUid) 1 else 2
+            val myPlayerNumber = if (selfUid == game.creatorUid) 1 else 2
             val winnerNumber = when (game.gameState.winnerUid) {
-                selfUid -> myPlayerNumber
-                null -> 0
-                else -> 3 - myPlayerNumber
+                selfUid -> 1 // I won
+                null -> 0    // Draw
+                else -> 2    // Opponent won
             }
-            showGameOverDialog(winnerNumber, game.gameState.player1Score, game.gameState.player2Score)
+            
+            // Correctly determine MY score and OPPONENT score
+            val myScore = if (myPlayerNumber == 1) game.gameState.player1Score else game.gameState.player2Score
+            val opponentScore = if (myPlayerNumber == 1) game.gameState.player2Score else game.gameState.player1Score
+            
+            showGameOverDialog(winnerNumber, myScore, opponentScore)
             return
         }
 
         val me = game.players[selfUid]
         val opponent = game.players.values.find { it.uid != selfUid }
         val isMyTurn = game.gameState.nextPlayerUid == selfUid
-        val currentPlayerNum = if (isMyTurn) (if (game.players.values.first().uid == selfUid) 1 else 2) else (if (game.players.values.first().uid == selfUid) 2 else 1)
+        val currentPlayerNum = if (isMyTurn) (if (selfUid == game.creatorUid) 1 else 2) else (if (selfUid == game.creatorUid) 2 else 1)
 
         // Update text labels with scores
-        val myPlayerNumber = if (game.players.values.first().uid == selfUid) 1 else 2
+        val myPlayerNumber = if (selfUid == game.creatorUid) 1 else 2
         val myScore = if (myPlayerNumber == 1) game.gameState.player1Score else game.gameState.player2Score
         val opponentScore = if (myPlayerNumber == 1) game.gameState.player2Score else game.gameState.player1Score
 
@@ -566,25 +575,73 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateUiForMultiplayer(game: NetworkGame) {
-        // FULL UI UPDATE - Called ONLY after animations complete
-        // This updates ALL visual elements including seeds and pit backgrounds
+    // Flag to prevent multiple stats updates
+    private var statsRecorded = false
 
-        if (game.gameState.gameOver) {
-            val myPlayerNumber = if (game.players.values.first().uid == selfUid) 1 else 2
-            val winnerNumber = when (game.gameState.winnerUid) {
-                selfUid -> myPlayerNumber
-                null -> 0
-                else -> 3 - myPlayerNumber // The other player
+    private fun updateUiForMultiplayer(game: PlayNowGame) {
+        // FULL UI UPDATE - Called ONLY after animations complete
+        // ALL visual elements including seeds and pit backgrounds
+        
+        // Check for navigation actions first
+        if (game.navigationAction != null) {
+            when (game.navigationAction) {
+                "playAgain" -> {
+                    startActivity(Intent(this, WaitingRoomActivity::class.java))
+                    finish()
+                    return
+                }
+                "mainMenu" -> {
+                    startActivity(Intent(this, MainMenuActivity::class.java))
+                    finish()
+                    return
+                }
             }
-            showGameOverDialog(winnerNumber, game.gameState.player1Score, game.gameState.player2Score)
-            return
         }
+
 
         val me = game.players[selfUid]
         val opponent = game.players.values.find { it.uid != selfUid }
+        
+        // CRITICAL: Determine player number robustly using creatorUid
+        // If I am creator, I am Player 1. Otherwise Player 2.
+        val myPlayerNumber = if (selfUid == game.creatorUid) 1 else 2
+        
+        val myScore = if (myPlayerNumber == 1) game.gameState.player1Score else game.gameState.player2Score
+        val opponentScore = if (myPlayerNumber == 1) game.gameState.player2Score else game.gameState.player1Score
+
+        if (game.gameState.gameOver) {
+            // Logic for winner display:
+            // player1Score TextView shows ME. player2Score TextView shows OPPONENT.
+            // So winner=1 means I won. winner=2 means Opponent won.
+            val winnerNumber = when (game.gameState.winnerUid) {
+                selfUid -> 1 
+                null -> 0
+                else -> 2 
+            }
+            // Pass scores in order: MyScore, OpponentScore
+            showGameOverDialog(winnerNumber, myScore, opponentScore)
+
+            // RECORD STATS TO DATABASE
+            // Each player updates THEIR OWN stats to comply with security rules
+            if (!statsRecorded) {
+                statsRecorded = true
+                android.util.Log.d("Stats", "Recording multiplayer stats for self...")
+                
+                lifecycleScope.launch {
+                    try {
+                        FirebaseManager.recordMultiplayerResultForSelf(gameId ?: "", game.gameState.winnerUid)
+                        android.util.Log.d("Stats", "Stats recorded successfully.")
+                    } catch (e: Exception) {
+                        android.util.Log.e("Stats", "Failed to record stats", e)
+                    }
+                }
+            }
+            return
+        }
+
         val isMyTurn = game.gameState.nextPlayerUid == selfUid
-        val currentPlayerNum = if (isMyTurn) (if (game.players.values.first().uid == selfUid) 1 else 2) else (if (game.players.values.first().uid == selfUid) 2 else 1)
+        // Current Player Number (1 or 2) for pit highlighting
+        val currentPlayerNum = if (isMyTurn) myPlayerNumber else (if (myPlayerNumber == 1) 2 else 1)
 
         player1Score.text = me?.displayName ?: "You"
         player2Score.text = opponent?.displayName ?: "Opponent"
@@ -603,19 +660,23 @@ class MainActivity : AppCompatActivity() {
         setupMultiplayerClickListeners(game, isMyTurn)
     }
     
-    private fun updateMultiplayerNonVisualElements(game: NetworkGame) {
+    private fun updateMultiplayerNonVisualElements(game: PlayNowGame) {
         // LIGHTWEIGHT UPDATE - Only updates text and click listeners
         // NO visual updates to seeds or pit backgrounds (prevents page refresh)
         // Used when no move was detected (e.g., status changes only)
         
         if (game.gameState.gameOver) {
-            val myPlayerNumber = if (game.players.values.first().uid == selfUid) 1 else 2
+            val myPlayerNumber = if (selfUid == game.creatorUid) 1 else 2
             val winnerNumber = when (game.gameState.winnerUid) {
-                selfUid -> myPlayerNumber
+                selfUid -> 1 
                 null -> 0
-                else -> 3 - myPlayerNumber
+                else -> 2 
             }
-            showGameOverDialog(winnerNumber, -1, -1)
+            // Correctly determine MY score and OPPONENT score
+            val myScore = if (myPlayerNumber == 1) game.gameState.player1Score else game.gameState.player2Score
+            val opponentScore = if (myPlayerNumber == 1) game.gameState.player2Score else game.gameState.player1Score
+            
+            showGameOverDialog(winnerNumber, myScore, opponentScore)
             return
         }
 
@@ -737,8 +798,8 @@ class MainActivity : AppCompatActivity() {
         delay(200)
     }
 
-    private fun setupMultiplayerClickListeners(game: NetworkGame, isMyTurn: Boolean) {
-        val myPlayerNumber = if (game.players.values.first().uid == selfUid) 1 else 2
+    private fun setupMultiplayerClickListeners(game: PlayNowGame, isMyTurn: Boolean) {
+        val myPlayerNumber = if (selfUid == game.creatorUid) 1 else 2
 
         for (i in 0..11) {
             val pitContainer = pitContainers[i]
@@ -757,7 +818,7 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    private fun showGameStatus(message: String, multiplayerGame: NetworkGame? = null) {
+    private fun showGameStatus(message: String, multiplayerGame: PlayNowGame? = null) {
         // Safety check: ensure activity is in valid state
         if (isFinishing || isDestroyed) return
         
@@ -773,7 +834,15 @@ class MainActivity : AppCompatActivity() {
             val player2 = playersList.getOrNull(1)
             
             // Determine whose turn it is based on nextPlayerUid
-            val currentPlayerData = if (player1?.uid == nextPlayerUid) player1 else player2
+            // Use stable player lookup
+            val player1Uid = multiplayerGame.creatorUid
+            val player2Uid = multiplayerGame.players.keys.find { it != player1Uid }
+            
+            val currentPlayerData = if (nextPlayerUid == player1Uid) {
+                if (player1Uid != null) multiplayerGame.players[player1Uid] else null
+            } else {
+                if (player2Uid != null) multiplayerGame.players[player2Uid] else null
+            }
             val currentPlayerName = currentPlayerData?.displayName ?: "Opponent"
             
             // Check if it's the local player's turn
@@ -1008,20 +1077,6 @@ class MainActivity : AppCompatActivity() {
         
         // Update Firebase scores if needed
         val user = FirebaseManager.auth.currentUser
-        if (user != null && winner == 1) { 
-            lifecycleScope.launch {
-                val scoreUpdate = 10L
-                val displayName = user.displayName ?: "Player"
-                val avatarId = AvatarPreferenceManager.getUserAvatar()
-
-                if (isSinglePlayer) {
-                    FirebaseManager.updateSinglePlayerScore(scoreUpdate, displayName, avatarId)
-                } else {
-                    FirebaseManager.updateMultiplayerScore(scoreUpdate, displayName, avatarId)
-                }
-            }
-        }
-        
         // Record game statistics (wins, losses, draws, totalPoints)
         if (user != null) {
             lifecycleScope.launch {
@@ -1030,11 +1085,11 @@ class MainActivity : AppCompatActivity() {
                 
                 if (isSinglePlayer) {
                     // Single-player statistics
-                    val result = when (winner) {
-                        1 -> FirebaseManager.MatchResult.WIN
-                        2 -> FirebaseManager.MatchResult.LOSS
-                        0 -> FirebaseManager.MatchResult.DRAW
-                        else -> return@launch
+                    val currentGameState = singlePlayerViewModel.gameState.value ?: return@launch
+                    val result = when {
+                        currentGameState.winner == 1 -> FirebaseManager.GameResult.WIN
+                        currentGameState.winner == 2 -> FirebaseManager.GameResult.LOSS
+                        else -> FirebaseManager.GameResult.DRAW
                     }
                     
                     try {
@@ -1043,46 +1098,12 @@ class MainActivity : AppCompatActivity() {
                     } catch (e: Exception) {
                         android.util.Log.e("MainActivity", "Failed to record single-player statistics", e)
                     }
-                } else {
-                    // Multiplayer statistics - get game data to determine players
-                    try {
-                        val gameSnapshot = FirebaseManager.gamesRef.child(gameId ?: "").get().await()
-                        val game = gameSnapshot.getValue(NetworkGame::class.java)
-                        
-                        if (game != null) {
-                            val playersList = game.players.values.toList()
-                            val player1 = playersList.getOrNull(0)
-                            val player2 = playersList.getOrNull(1)
-                            
-                            if (player1 != null && player2 != null) {
-                                val winnerId = when (winner) {
-                                    1 -> player1.uid
-                                    2 -> player2.uid
-                                    0 -> null // Draw
-                                    else -> null
-                                }
-                                
-                                FirebaseManager.recordMultiplayerResult(
-                                    player1Id = player1.uid ?: "",
-                                    player2Id = player2.uid ?: "",
-                                    winnerId = winnerId,
-                                    player1Name = player1.displayName ?: "Player 1",
-                                    player2Name = player2.displayName ?: "Player 2",
-                                    player1Avatar = player1.avatarId ?: "avatar_1",
-                                    player2Avatar = player2.avatarId ?: "avatar_2"
-                                )
-                                android.util.Log.d("MainActivity", "Multiplayer statistics recorded")
-                            }
-                        }
-                    } catch (e: Exception) {
-                        android.util.Log.e("MainActivity", "Failed to record multiplayer statistics", e)
-                    }
                 }
             }
         }
     }
 
-    private fun updateMultiplayerAvatars(game: NetworkGame) {
+    private fun updateMultiplayerAvatars(game: PlayNowGame) {
         val me = game.players[selfUid]
         val opponent = game.players.values.find { it.uid != selfUid }
 
@@ -1134,14 +1155,6 @@ class MainActivity : AppCompatActivity() {
                 popupMenu.menuInflater.inflate(R.menu.menu_multiplayer, popupMenu.menu)
                 popupMenu.setOnMenuItemClickListener { item ->
                     when (item.itemId) {
-                        R.id.menu_save_game -> {
-                            saveMultiplayerGame()
-                            true
-                        }
-                        R.id.menu_resume_game -> {
-                            startActivity(Intent(this, ResumeGameActivity::class.java))
-                            true
-                        }
                         R.id.menu_exit_game -> {
                             showExitConfirmationDialog()
                             true
@@ -1172,32 +1185,44 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showExitConfirmationDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Exit Game")
-            .setMessage("Unsaved progress will be lost. Are you sure you want to exit?")
-            .setPositiveButton("Exit") { _, _ ->
-                if (isSinglePlayer) {
-                    // Single player: just exit locally
-                    startActivity(Intent(this, MainMenuActivity::class.java))
-                    finish()
-                } else {
-                    // Multiplayer: Update game state to trigger navigation for both players
-                    lifecycleScope.launch {
-                        try {
-                            gameId?.let { id ->
-                                FirebaseManager.gamesRef.child(id).child("navigationAction").setValue("mainMenu")
-                            }
-                        } catch (e: Exception) {
-                            android.util.Log.e("MainActivity", "Failed to set navigation action", e)
-                            // Fallback: navigate anyway
-                            startActivity(Intent(this@MainActivity, MainMenuActivity::class.java))
-                            finish()
+        val dialogView = layoutInflater.inflate(R.layout.dialog_exit_game, null)
+        val cancelButton = dialogView.findViewById<Button>(R.id.cancelButton)
+        val exitButton = dialogView.findViewById<Button>(R.id.exitButton)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        exitButton.setOnClickListener {
+            dialog.dismiss()
+            if (isSinglePlayer) {
+                // Single player: just exit locally
+                startActivity(Intent(this, MainMenuActivity::class.java))
+                finish()
+            } else {
+                // Multiplayer: Update game state to trigger navigation for both players
+                lifecycleScope.launch {
+                    try {
+                        gameId?.let { id ->
+                            FirebaseManager.gamesRef.child(id).child("navigationAction").setValue("mainMenu")
                         }
+                    } catch (e: Exception) {
+                        android.util.Log.e("MainActivity", "Failed to set navigation action", e)
+                        // Fallback: navigate anyway
+                        startActivity(Intent(this@MainActivity, MainMenuActivity::class.java))
+                        finish()
                     }
                 }
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+
+        dialog.show()
     }
 
     override fun onResume() {
@@ -1229,7 +1254,7 @@ class MainActivity : AppCompatActivity() {
         }
         soundManager.release()
         if (!isSinglePlayer) {
-            FirebaseManager.leaveGameSession()
+
             // Destroy Agora Engine
             RtcEngine.destroy()
             rtcEngine = null
@@ -1238,9 +1263,9 @@ class MainActivity : AppCompatActivity() {
 
     // --- Agora Voice Chat Methods ---
 
-    private fun setupVoiceChat() {
+    private fun setupVoiceChat(autoEnable: Boolean = false) {
         // Change Save Button to Mic Button
-        actionButton.setImageResource(R.drawable.microphone_off)
+        actionButton.setImageResource(if (autoEnable) R.drawable.microphone_on else R.drawable.microphone_off)
         actionButton.setOnClickListener {
             onMicrophoneClicked()
         }
@@ -1250,6 +1275,14 @@ class MainActivity : AppCompatActivity() {
         // Join channel automatically if permission is granted, otherwise wait for user to click mic
         if (checkPermissions()) {
              joinChannel()
+             if (autoEnable) {
+                 isVoiceEnabled = true
+                 rtcEngine?.muteLocalAudioStream(false)
+                 Toast.makeText(this, "Voice Chat On", Toast.LENGTH_SHORT).show()
+             }
+        } else if (autoEnable) {
+            // Request permissions if auto-enable is requested
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.MODIFY_AUDIO_SETTINGS), PERMISSION_REQ_ID)
         }
     }
 

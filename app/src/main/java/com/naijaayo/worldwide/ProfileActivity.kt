@@ -163,31 +163,45 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun showForgotPasswordDialog() {
-        val input = EditText(this)
-        input.hint = "Enter your email"
-        input.inputType = android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+        val dialogView = layoutInflater.inflate(R.layout.dialog_reset_password, null)
+        val errorBanner = dialogView.findViewById<TextView>(R.id.errorBanner)
+        val emailInput = dialogView.findViewById<EditText>(R.id.emailInput)
+        val cancelButton = dialogView.findViewById<Button>(R.id.cancelButton)
+        val sendButton = dialogView.findViewById<Button>(R.id.sendButton)
 
-        AlertDialog.Builder(this)
-            .setTitle("Reset Password")
-            .setMessage("Enter your email address to receive a password reset link.")
-            .setView(input)
-            .setPositiveButton("Send") { _, _ ->
-                val email = input.text.toString().trim()
-                if (email.isNotEmpty()) {
-                    auth.sendPasswordResetEmail(email)
-                        .addOnSuccessListener {
-                            Toast.makeText(this, "Reset link sent to $email", Toast.LENGTH_LONG).show()
-                        }
-                        .addOnFailureListener { e ->
-                            authErrorText.text = "Error: ${e.message}"
-                            authErrorText.visibility = View.VISIBLE
-                        }
-                } else {
-                    Toast.makeText(this, "Please enter an email.", Toast.LENGTH_SHORT).show()
-                }
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        sendButton.setOnClickListener {
+            val email = emailInput.text.toString().trim()
+            if (email.isEmpty()) {
+                errorBanner.text = "Please enter an email"
+                errorBanner.visibility = View.VISIBLE
+            } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                errorBanner.text = "Invalid email"
+                errorBanner.visibility = View.VISIBLE
+            } else {
+                errorBanner.visibility = View.GONE
+                auth.sendPasswordResetEmail(email)
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "Reset link sent to $email", Toast.LENGTH_LONG).show()
+                        dialog.dismiss()
+                    }
+                    .addOnFailureListener { e ->
+                        errorBanner.text = "Error: ${e.message}"
+                        errorBanner.visibility = View.VISIBLE
+                    }
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+
+        dialog.show()
     }
 
     private fun setupHoverAnimations() {

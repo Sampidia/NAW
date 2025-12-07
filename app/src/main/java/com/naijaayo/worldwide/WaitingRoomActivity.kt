@@ -17,7 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
 import com.naijaayo.worldwide.network.FirebaseManager
-import com.naijaayo.worldwide.network.NetworkGame
+
 import com.naijaayo.worldwide.theme.AvatarPreferenceManager
 
 class WaitingRoomActivity : AppCompatActivity() {
@@ -36,11 +36,13 @@ class WaitingRoomActivity : AppCompatActivity() {
     private lateinit var infoBannerText: TextView
     private lateinit var letsPlayButton: Button
     private lateinit var gameLevelDisplay: TextView
+    private lateinit var player1FullAvatar: ImageView
+    private lateinit var player2FullAvatar: ImageView
 
     private var roomId: String? = null
     private var roomCode: String? = null
     private var gameListener: ValueEventListener? = null
-    private var currentGame: NetworkGame? = null
+    private var currentGame: PlayNowGame? = null
     private var currentUserId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,6 +89,8 @@ class WaitingRoomActivity : AppCompatActivity() {
         infoBannerText = findViewById(R.id.infoBannerText)
         letsPlayButton = findViewById(R.id.letsPlayButton)
         gameLevelDisplay = findViewById(R.id.gameLevelDisplay)
+        player1FullAvatar = findViewById(R.id.player1FullAvatar)
+        player2FullAvatar = findViewById(R.id.player2FullAvatar)
     }
 
     private fun setupListeners() {
@@ -127,7 +131,7 @@ class WaitingRoomActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateUI(game: NetworkGame) {
+    private fun updateUI(game: PlayNowGame) {
         val players = game.players.values.toList()
         val playerCount = players.size
 
@@ -141,6 +145,10 @@ class WaitingRoomActivity : AppCompatActivity() {
             player1Name.text = p1.displayName
             player1Avatar.visibility = View.VISIBLE
             player1Name.visibility = View.VISIBLE
+            
+            // Update full avatar for VS section
+            player1FullAvatar.setImageResource(AvatarPreferenceManager.getAvatarFullBody(p1.avatarId ?: "ayo"))
+            player1FullAvatar.alpha = 1.0f
             
             // Show remove button only if current user is creator and this is not the creator
             removePlayer1Button.visibility = if (currentUserId == game.creatorUid && p1.uid != game.creatorUid) {
@@ -157,6 +165,10 @@ class WaitingRoomActivity : AppCompatActivity() {
             player2Name.text = p2.displayName
             player2Avatar.visibility = View.VISIBLE
             player2Name.visibility = View.VISIBLE
+            
+            // Update full avatar for VS section - fully visible when player 2 joins
+            player2FullAvatar.setImageResource(AvatarPreferenceManager.getAvatarFullBody(p2.avatarId ?: "ayo"))
+            player2FullAvatar.alpha = 1.0f
             
             // Show remove button only if current user is creator
             removePlayer2Button.visibility = if (currentUserId == game.creatorUid) {
@@ -182,6 +194,10 @@ class WaitingRoomActivity : AppCompatActivity() {
             player2Avatar.visibility = View.GONE
             player2Name.visibility = View.GONE
             removePlayer2Button.visibility = View.GONE
+            
+            // Dim player 2 full avatar when waiting
+            player2FullAvatar.setImageResource(AvatarPreferenceManager.getAvatarFullBody("ayo"))
+            player2FullAvatar.alpha = 0.3f
 
             // Disable Let's Play button
             letsPlayButton.isEnabled = false
@@ -202,48 +218,40 @@ class WaitingRoomActivity : AppCompatActivity() {
     }
 
     private fun showAddPlayerDialog() {
-        val options = arrayOf("Search by Username", "Invite Friends", "Share Room Code")
+        val options = arrayOf("Invite Friends", "Share Room Code")
         
         AlertDialog.Builder(this)
             .setTitle("Add Player")
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> showSearchUsernameDialog()
-                    1 -> showInviteFriendsDialog()
-                    2 -> shareRoomCode()
+                    0 -> showInviteFriendsDialog()
+                    1 -> shareRoomCode()
                 }
             }
             .show()
-    }
-
-    private fun showSearchUsernameDialog() {
-        val input = android.widget.EditText(this)
-        input.hint = "Enter username"
-        
-        AlertDialog.Builder(this)
-            .setTitle("Search Player")
-            .setView(input)
-            .setPositiveButton("Search") { _, _ ->
-                val username = input.text.toString().trim()
-                if (username.isNotEmpty()) {
-                    searchAndAddPlayer(username)
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun searchAndAddPlayer(username: String) {
-        // TODO: Implement search by username in FirebaseManager
-        Toast.makeText(this, "Searching for $username...", Toast.LENGTH_SHORT).show()
-        // For now, show placeholder message
-        Toast.makeText(this, "Feature coming soon!", Toast.LENGTH_SHORT).show()
     }
 
     private fun showInviteFriendsDialog() {
-        // TODO: Implement friends list with online status
-        Toast.makeText(this, "Friends list coming soon!", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            // Get current user's username
+            val currentUid = FirebaseManager.auth.currentUser?.uid ?: return@launch
+            val profile = FirebaseManager.getUserProfile(currentUid)
+            val username = profile?.get("username") as? String ?: "Player"
+            
+            // Get current game level
+            val level = currentGame?.level ?: "MEDIUM"
+            
+            // Show the invite friends dialog
+            val dialog = InviteFriendsDialog.newInstance(
+                roomId = roomId ?: "",
+                roomCode = roomCode ?: "",
+                gameLevel = level,
+                username = username
+            )
+            dialog.show(supportFragmentManager, "InviteFriendsDialog")
+        }
     }
+
 
     private fun shareRoomCode() {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

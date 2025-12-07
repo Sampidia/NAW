@@ -10,131 +10,84 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.database.ValueEventListener
 import com.naijaayo.worldwide.network.FirebaseManager
-import com.naijaayo.worldwide.network.NetworkGame
-import com.naijaayo.worldwide.network.Player
+import com.naijaayo.worldwide.network.parsePlayNowGame
+import com.naijaayo.worldwide.PlayNowGame
+import com.naijaayo.worldwide.PlayNowPlayer
 import com.naijaayo.worldwide.theme.AvatarPreferenceManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import com.bumptech.glide.Glide
 
 class GameRoomActivity : AppCompatActivity() {
 
-    private lateinit var searchInput: EditText
-    private lateinit var searchJoinButton: Button
-    private lateinit var roomsRecyclerView: RecyclerView
     private lateinit var createRoomButton: Button
-    private lateinit var resumeGameButton: Button
+    private lateinit var joinRoomButton: Button
+    private lateinit var searchRoomInput: EditText
     private lateinit var loadingProgressBar: ProgressBar
-
-    private lateinit var roomAdapter: RoomAdapter
-    private var roomsListener: ValueEventListener? = null
+    private lateinit var backButton: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
         setContentView(R.layout.activity_game_room)
 
-        // Initialize AvatarPreferenceManager before using it
-        AvatarPreferenceManager.initialize(this)
-
-        initializeViews()
-        setupRecyclerView()
-        setupListeners()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        listenForRooms()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        roomsListener?.let { FirebaseManager.removeListener(it) }
-    }
-
-    private fun initializeViews() {
-        searchInput = findViewById(R.id.searchRoomInput)
-        searchJoinButton = findViewById(R.id.searchJoinButton)
-        roomsRecyclerView = findViewById(R.id.roomsRecyclerView)
+        // Initialize views
         createRoomButton = findViewById(R.id.createRoomButton)
-        resumeGameButton = findViewById(R.id.resumeGameButton)
+        joinRoomButton = findViewById(R.id.searchJoinButton)
+        searchRoomInput = findViewById(R.id.searchRoomInput)
         loadingProgressBar = findViewById(R.id.loadingProgressBar)
-    }
+        backButton = findViewById(R.id.backButton)
 
-    private fun setupRecyclerView() {
-        roomAdapter = RoomAdapter(emptyList()) { game ->
-            // Show dialog instead of joining directly
-            showJoinRoomDialog()
+
+        // Set listeners
+        createRoomButton.setOnClickListener {
+            showLevelSelectionDialog()
         }
-        roomsRecyclerView.layoutManager = LinearLayoutManager(this)
-        roomsRecyclerView.adapter = roomAdapter
-    }
 
-    private fun setupListeners() {
-        searchJoinButton.setOnClickListener {
-            val roomId = searchInput.text.toString().trim().uppercase()
-            if (roomId.isNotEmpty()) {
-                joinRoom(roomId)
+        joinRoomButton.setOnClickListener {
+            val code = searchRoomInput.text.toString().trim()
+            if (code.isNotEmpty()) {
+                joinRoom(code)
             } else {
-                Toast.makeText(this, "Please enter a Room ID", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please enter a room code", Toast.LENGTH_SHORT).show()
             }
         }
 
-        createRoomButton.setOnClickListener {
-            createRoom()
-        }
 
-        resumeGameButton.setOnClickListener {
-            startActivity(Intent(this, ResumeGameActivity::class.java))
+
+        backButton.setOnClickListener {
+            finish()
         }
     }
 
-    private fun listenForRooms() {
-        roomsListener = FirebaseManager.listenForPublicRooms { rooms ->
-            // Show all rooms as requested by user
-            roomAdapter.updateRooms(rooms)
-        }
-    }
-
-    private fun createRoom() {
-        // Show level selection dialog
+    private fun showLevelSelectionDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_level_selection, null)
-        
-        val appLogo = dialogView.findViewById<ImageView>(R.id.appLogo)
-        Glide.with(this).load(R.raw.logo_animate).into(appLogo)
-
         val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
             .setView(dialogView)
-            .setCancelable(true)
             .create()
 
-        dialogView.findViewById<Button>(R.id.easyButton).setOnClickListener {
-            dialog.dismiss()
+        dialogView.findViewById<View>(R.id.easyButton).setOnClickListener {
             createRoomWithLevel("EASY")
-        }
-
-        dialogView.findViewById<Button>(R.id.mediumButton).setOnClickListener {
             dialog.dismiss()
+        }
+        dialogView.findViewById<View>(R.id.mediumButton).setOnClickListener {
             createRoomWithLevel("MEDIUM")
-        }
-
-        dialogView.findViewById<Button>(R.id.hardButton).setOnClickListener {
             dialog.dismiss()
-            createRoomWithLevel("HARD")
         }
-
-        dialogView.findViewById<Button>(R.id.rulesButton).setOnClickListener {
+        dialogView.findViewById<View>(R.id.hardButton).setOnClickListener {
+            createRoomWithLevel("HARD")
+            dialog.dismiss()
+        }
+        dialogView.findViewById<View>(R.id.rulesButton).setOnClickListener {
             showRules()
         }
-
+        
+        // Ensure white background as requested
+        dialog.window?.setBackgroundDrawableResource(android.R.color.white)
         dialog.show()
     }
 
-        private fun showRules() {
+    private fun showRules() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_game_rules, null)
         val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
             .setView(dialogView)
@@ -164,6 +117,8 @@ class GameRoomActivity : AppCompatActivity() {
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
 
+
+
     private fun createRoomWithLevel(level: String) {
         loadingProgressBar.visibility = View.VISIBLE
         createRoomButton.isEnabled = false
@@ -176,9 +131,9 @@ class GameRoomActivity : AppCompatActivity() {
                 val avatarId = profile?.get("avatarId") as? String ?: AvatarPreferenceManager.getUserAvatar()
                 val displayName = profile?.get("displayName") as? String ?: "Player" // Fallback
 
-                val player = Player(user.uid, displayName, avatarId)
+                val player = PlayNowPlayer(user.uid, displayName, avatarId)
                 
-                // Generate 6-7 digit room code
+                // Generate 6-digit room code
                 val roomCode = generateRoomCode()
                 val roomId = FirebaseManager.createRoom(player, roomCode, level)
                 
@@ -191,42 +146,6 @@ class GameRoomActivity : AppCompatActivity() {
         }
     }
 
-    private fun generateRoomCode(): String {
-        // Generate random 6-7 digit code
-        val codeLength = (6..7).random()
-        val chars = ('A'..'Z') + ('0'..'9')
-        return (1..codeLength).map { chars.random() }.joinToString("")
-    }
-
-    private fun showJoinRoomDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_join_room, null)
-        val roomIdInput = dialogView.findViewById<EditText>(R.id.roomIdInput)
-        val joinButton = dialogView.findViewById<Button>(R.id.joinRoomButton)
-        val cancelButton = dialogView.findViewById<Button>(R.id.cancelButton)
-        
-        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
-            .setView(dialogView)
-            .setCancelable(true)
-            .create()
-        
-        joinButton.setOnClickListener {
-            val roomCode = roomIdInput.text.toString().trim().uppercase()
-            if (roomCode.isNotEmpty()) {
-                dialog.dismiss()
-                joinRoom(roomCode)
-            } else {
-                Toast.makeText(this, "Please enter a Room ID", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        cancelButton.setOnClickListener {
-            dialog.dismiss()
-        }
-        
-        dialog.show()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-    }
-
     private fun joinRoom(roomCode: String) {
         loadingProgressBar.visibility = View.VISIBLE
         
@@ -237,7 +156,7 @@ class GameRoomActivity : AppCompatActivity() {
                 val roomId = FirebaseManager.findRoomByCode(roomCode.uppercase())
                 
                 if (roomId == null) {
-                    Toast.makeText(this@GameRoomActivity, "NetworkGame Room Code Invalid", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@GameRoomActivity, "Game Room Code Invalid", Toast.LENGTH_SHORT).show()
                     loadingProgressBar.visibility = View.GONE
                     return@launch
                 }
@@ -247,7 +166,7 @@ class GameRoomActivity : AppCompatActivity() {
                 val avatarId = profile?.get("avatarId") as? String ?: AvatarPreferenceManager.getUserAvatar()
                 val displayName = profile?.get("displayName") as? String ?: "Player"
 
-                val player = Player(user.uid, displayName, avatarId)
+                val player = PlayNowPlayer(user.uid, displayName, avatarId)
                 val success = FirebaseManager.joinPrivateRoom(roomId, player)
                 
                 if (success) {
@@ -255,12 +174,12 @@ class GameRoomActivity : AppCompatActivity() {
                 } else {
                     // Check if room is full or already started
                     val roomSnapshot = FirebaseManager.gamesRef.child(roomId).get().await()
-                    val game = roomSnapshot.getValue(NetworkGame::class.java)
+                    val game = parsePlayNowGame(roomSnapshot)
                     
                     if (game != null && game.players.size >= 2) {
-                        Toast.makeText(this@GameRoomActivity, "NetworkGame Room Full", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@GameRoomActivity, "Game Room Full", Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(this@GameRoomActivity, "Cannot join room. NetworkGame may have already started.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@GameRoomActivity, "Cannot join room. Game may have already started.", Toast.LENGTH_SHORT).show()
                     }
                 }
             } else {
@@ -270,6 +189,12 @@ class GameRoomActivity : AppCompatActivity() {
         }
     }
 
+    private fun generateRoomCode(): String {
+        val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        return (1..6)
+            .map { chars.random() }
+            .joinToString("")
+    }
 
     private fun navigateToWaitingRoom(roomId: String, roomCode: String) {
         val intent = Intent(this, WaitingRoomActivity::class.java)

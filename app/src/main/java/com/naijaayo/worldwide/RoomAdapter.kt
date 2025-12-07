@@ -8,12 +8,12 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.naijaayo.worldwide.network.NetworkGame
+
 import com.naijaayo.worldwide.theme.AvatarPreferenceManager
 
 class RoomAdapter(
-    private var rooms: List<NetworkGame>,
-    private val onJoinClick: (NetworkGame) -> Unit
+    private var rooms: List<PlayNowGame>,
+    private val onJoinClick: (PlayNowGame) -> Unit
 ) : RecyclerView.Adapter<RoomAdapter.RoomViewHolder>() {
 
     class RoomViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -92,7 +92,7 @@ class RoomAdapter(
 
     override fun getItemCount() = rooms.size
 
-    fun updateRooms(newRooms: List<NetworkGame>) {
+    fun updateRooms(newRooms: List<PlayNowGame>) {
         rooms = newRooms
         notifyDataSetChanged()
     }
