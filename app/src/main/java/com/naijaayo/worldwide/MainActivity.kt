@@ -108,6 +108,8 @@ class MainActivity : AppCompatActivity() {
         BoardManager.initialize(this) // Initialize BoardManager
         BackgroundMusicManager.initialize(this)
         soundManager = SoundManager(this).apply { loadSounds() }
+        com.naijaayo.worldwide.ads.AdMobHelper.initialize(this)
+        com.naijaayo.worldwide.billing.BillingManager.initialize(this)
 
         initializeViews()
         setupMenu()

@@ -126,6 +126,52 @@ class GameRoomActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val user = FirebaseManager.auth.currentUser
             if (user != null) {
+
+                 // check coin balance
+                val userProfile = FirebaseManager.getUserProfile(user.uid)
+                val coinBalance = (userProfile?.get("coinBalance") as? Long) ?: 0L
+
+                if (coinBalance < 1) {
+                    loadingProgressBar.visibility = View.GONE
+                    createRoomButton.isEnabled = true
+                    
+                    val dialog = com.naijaayo.worldwide.ui.TopUpDialog(this@GameRoomActivity, 
+                        onBuyCoinClicked = {
+                            val intent = Intent(this@GameRoomActivity, com.naijaayo.worldwide.ui.BuyCoinActivity::class.java)
+                            startActivity(intent)
+                        },
+                        onWatchAdClicked = {
+                            com.naijaayo.worldwide.ads.AdMobHelper.showRewardedAd(this@GameRoomActivity, 
+                                onRewardEarned = { amount ->
+                                   lifecycleScope.launch {
+                                       val uid = com.naijaayo.worldwide.network.FirebaseManager.auth.currentUser?.uid
+                                       if (uid != null) {
+                                           val success = com.naijaayo.worldwide.network.FirebaseManager.addCoins(uid, 1) // +1 Coin
+                                           if (success) {
+                                               Toast.makeText(this@GameRoomActivity, "Watched Ad! +1 Coin", Toast.LENGTH_SHORT).show()
+                                           }
+                                       }
+                                   }
+                                },
+                                onAdClosed = {
+                                    // Optional: Do something when ad closes
+                                }
+                            )
+                        }
+                    )
+                    dialog.show()
+                    return@launch
+                }
+
+                 // Deduct coin
+                val deductionSuccess = FirebaseManager.deductCoins(user.uid, 1)
+                if (!deductionSuccess) {
+                     loadingProgressBar.visibility = View.GONE
+                     createRoomButton.isEnabled = true
+                     Toast.makeText(this@GameRoomActivity, "Insufficient coins or connection error.", Toast.LENGTH_SHORT).show()
+                     return@launch
+                }
+                
                 // Fetch latest profile data to ensure name/avatar are correct
                 val profile = FirebaseManager.getUserProfile(user.uid)
                 val avatarId = profile?.get("avatarId") as? String ?: AvatarPreferenceManager.getUserAvatar()

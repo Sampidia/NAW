@@ -59,8 +59,11 @@ class SoundManager(private val context: Context) {
             soundMap["win"] = soundPool.load(context, R.raw.win_sound, 1)
             android.util.Log.d("SoundLoad", "✅ Win sound loaded: ${soundMap["win"]}")
 
+            soundMap["coin"] = soundPool.load(context, R.raw.coin_sound, 1)
+            android.util.Log.d("SoundLoad", "✅ Coin sound loaded: ${soundMap["coin"]}")
+
             // Verify all sounds loaded successfully
-            val allLoaded = soundMap.size == 4 && !soundMap.values.contains(0)
+            val allLoaded = soundMap.size == 5 && !soundMap.values.contains(0)
             android.util.Log.d("SoundLoad", "🎵 All sounds loaded successfully: $allLoaded (total: ${soundMap.size})")
 
             if (!allLoaded) {
@@ -144,6 +147,19 @@ class SoundManager(private val context: Context) {
         if (soundId != null) {
             val volume = masterVolume.coerceIn(0f, 1f)
             soundPool.play(soundId, volume, volume, 3, 0, 1.0f)
+        }
+    }
+
+    /**
+     * Play coin sound effect for rewards
+     */
+    fun playCoinSound() {
+        if (!isEnabled) return
+
+        val soundId = soundMap["coin"]
+        if (soundId != null) {
+            val volume = (0.8f * masterVolume).coerceIn(0f, 1f)
+            soundPool.play(soundId, volume, volume, 1, 0, 1.0f)
         }
     }
 

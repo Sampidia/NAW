@@ -21,63 +21,51 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Visual seeds container -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/seedsContainer"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@android:color/transparent"
+    <!-- Visual seeds container - Flattened for lint fix -->
+    <!-- Individual seed positions for 1-4 seeds -->
+    <ImageView
+        android:id="@+id/seed1"
+        android:layout_width="8dp"
+        android:layout_height="6dp"
+        android:src="@drawable/seed_single"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/pitCount"
+        app:layout_constraintEnd_toStartOf="@id/seed2"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/seed2"
+        android:layout_width="8dp"
+        android:layout_height="6dp"
+        android:src="@drawable/seed_single"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/pitCount"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/seed1"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/seed3"
+        android:layout_width="8dp"
+        android:layout_height="6dp"
+        android:src="@drawable/seed_single"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/seed4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/pitCount" />
+
+    <ImageView
+        android:id="@+id/seed4"
+        android:layout_width="8dp"
+        android:layout_height="6dp"
+        android:src="@drawable/seed_single"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <!-- Individual seed positions for 1-4 seeds -->
-        <ImageView
-            android:id="@+id/seed1"
-            android:layout_width="8dp"
-            android:layout_height="6dp"
-            android:src="@drawable/seed_single"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@id/pitCount"
-            app:layout_constraintEnd_toStartOf="@id/seed2"
-            app:layout_constraintHorizontal_chainStyle="spread"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageView
-            android:id="@+id/seed2"
-            android:layout_width="8dp"
-            android:layout_height="6dp"
-            android:src="@drawable/seed_single"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@id/pitCount"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/seed1"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageView
-            android:id="@+id/seed3"
-            android:layout_width="8dp"
-            android:layout_height="6dp"
-            android:src="@drawable/seed_single"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/seed4"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/pitCount" />
-
-        <ImageView
-            android:id="@+id/seed4"
-            android:layout_width="8dp"
-            android:layout_height="6dp"
-            android:src="@drawable/seed_single"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/seed3"
-            app:layout_constraintTop_toBottomOf="@id/pitCount" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        app:layout_constraintStart_toEndOf="@id/seed3"
+        app:layout_constraintTop_toBottomOf="@id/pitCount" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

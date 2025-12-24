@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace 'com.naijaayo.worldwide'
-    compileSdkVersion 34
+    compileSdkVersion 35
 
     dataBinding {
         enabled = true
@@ -17,14 +17,17 @@ android {
     defaultConfig {
         applicationId "com.naijaayo.worldwide"
         minSdkVersion 23
-        targetSdkVersion 34
-        versionCode 1
-        versionName "1.0"
+        targetSdkVersion 35
+        versionCode 8
+        versionName "1.0.7"
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            ndk {
+                debugSymbolLevel 'FULL'
+            }
         }
     }
     compileOptions {
@@ -62,5 +65,14 @@ dependencies {
 
 
     // Agora Voice Chat
-    implementation 'io.agora.rtc:full-sdk:4.3.0'
+    implementation 'io.agora.rtc:full-sdk:4.6.1'
+
+    // AdMob
+    implementation 'com.google.android.gms:play-services-ads:23.0.0'
+
+    // Google Play Billing
+    implementation 'com.android.billingclient:billing:8.2.0'
+
+    // Google Play Games
+    implementation 'com.google.android.gms:play-services-games-v2:21.0.0'
 }

@@ -19,7 +19,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NAIJAAYOWORLDWIDE"
         android:networkSecurityConfig="@xml/network_security_config"
+        android:memtagMode="async"
         tools:targetApi="31">
+
+        <!-- AdMob App ID -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-1169009766287256~5385288658"/>
+
+        <!-- Google Play Games Sidekick -->
+        <meta-data
+            android:name="com.google.android.gms.games.PlayGamesSidekick"
+            android:value="@bool/play_games_sidekick_enabled" />
 
         <!-- Splash Screen - New Launcher -->
         <activity
@@ -68,6 +79,11 @@
 
 
         <activity android:name=".GameRoomActivity" android:screenOrientation="portrait" />
+        
+        <activity
+            android:name=".ui.BuyCoinActivity"
+            android:screenOrientation="portrait" 
+            android:theme="@style/Theme.NAIJAAYOWORLDWIDE.NoActionBar"/>
     </application>
 
 </manifest>

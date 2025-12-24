@@ -68,7 +68,9 @@ class ProfileActivity : AppCompatActivity() {
         initializeViews()
         setupTabs()
         setupAuthLogic()
+        setupAuthLogic()
         setupConfirmButton()
+        setupTopUpButton()
 
         setupHoverAnimations()
         updateAuthUI()
@@ -130,9 +132,47 @@ class ProfileActivity : AppCompatActivity() {
                 selectedAvatarId = avatarId
                 updateCharacter(avatarId)
                 selectTabForAvatar(avatarId)
+                
+                // Update Coin Balance
+                val coinBalance = (user["coinBalance"] as? Long) ?: 0L
+                findViewById<TextView>(R.id.coinBalanceText).text = coinBalance.toString()
+                
             } else {
                 Toast.makeText(this@ProfileActivity, "Failed to load profile.", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun setupTopUpButton() {
+        findViewById<Button>(R.id.topUpButton).setOnClickListener {
+            val dialog = com.naijaayo.worldwide.ui.TopUpDialog(this, 
+                onBuyCoinClicked = {
+                    val intent = android.content.Intent(this, com.naijaayo.worldwide.ui.BuyCoinActivity::class.java)
+                    startActivity(intent)
+                },
+                onWatchAdClicked = {
+                    com.naijaayo.worldwide.ads.AdMobHelper.showRewardedAd(this, 
+                        onRewardEarned = { amount ->
+                           // AdMob amount is usually configured in dashboard, but we asked for +1 coin
+                           // We will grant +1 coin regardless of AdMob amount for consistency with requirement
+                           lifecycleScope.launch {
+                               val uid = com.naijaayo.worldwide.network.FirebaseManager.auth.currentUser?.uid
+                               if (uid != null) {
+                                   val success = com.naijaayo.worldwide.network.FirebaseManager.addCoins(uid, 1) // +1 Coin
+                                   if (success) {
+                                       Toast.makeText(this@ProfileActivity, "Watched Ad! +1 Coin", Toast.LENGTH_SHORT).show()
+                                       loadUserProfile(uid) // Refresh UI
+                                   }
+                               }
+                           }
+                        },
+                        onAdClosed = {
+                            // Optional: Do something when ad closes
+                        }
+                    )
+                }
+            )
+            dialog.show()
         }
     }
 

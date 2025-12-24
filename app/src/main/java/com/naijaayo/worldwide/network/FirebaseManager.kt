@@ -709,6 +709,7 @@ object FirebaseManager {
                 "displayName" to username, // Use username as display name by default
                 "email" to email,
                 "avatarId" to "ayo", // Default avatar
+                "coinBalance" to 10L, // Initial coin bonus
                 "score" to 0L
             )
             saveUserProfile(uid, profile)
@@ -1187,6 +1188,103 @@ object FirebaseManager {
      */
     fun removeOnlineStatusListener(uid: String, listener: ValueEventListener) {
         onlineUsersRef.child(uid).removeEventListener(listener)
+    }
+    // --- Coin System ---
+    
+    suspend fun addCoins(userId: String, amount: Int): Boolean {
+        val userRef = firestore.collection("users").document(userId)
+        return try {
+            firestore.runTransaction { transaction ->
+                val snapshot = transaction.get(userRef)
+                val currentBalance = (snapshot.getLong("coinBalance") ?: 0L).toInt()
+                transaction.update(userRef, "coinBalance", currentBalance + amount)
+            }.await()
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error adding coins", e)
+            false
+        }
+    }
+    
+    suspend fun deductCoins(userId: String, amount: Int): Boolean {
+        val userRef = firestore.collection("users").document(userId)
+        return try {
+            firestore.runTransaction { transaction ->
+                val snapshot = transaction.get(userRef)
+                val currentBalance = (snapshot.getLong("coinBalance") ?: 0L).toInt()
+                
+                if (currentBalance >= amount) {
+                    transaction.update(userRef, "coinBalance", currentBalance - amount)
+                    true // Success
+                } else {
+                    false // Insufficient funds
+                }
+            }.await() ?: false // Explicitly handle potential null from transaction
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error deducting coins", e)
+            false
+        }
+    }
+    
+    suspend fun verifyCoupon(code: String): Int? {
+        val couponRef = firestore.collection("coupons").document(code)
+        val user = auth.currentUser ?: return null
+        
+        return try {
+            firestore.runTransaction { transaction ->
+                val snapshot = transaction.get(couponRef)
+                
+                if (!snapshot.exists()) return@runTransaction null // Invalid code
+                
+                val usedBy = snapshot.get("usedBy") as? List<String> ?: emptyList()
+                if (usedBy.contains(user.uid)) return@runTransaction null // Already used
+                
+                val amount = (snapshot.getLong("amount") ?: 0L).toInt()
+                
+                // Add user to usedBy list
+                val newUsedBy = usedBy + user.uid
+                transaction.update(couponRef, "usedBy", newUsedBy)
+                
+                // Add coins to user
+                val userRef = firestore.collection("users").document(user.uid)
+                val userSnapshot = transaction.get(userRef)
+                val currentBalance = (userSnapshot.getLong("coinBalance") ?: 0L).toInt()
+                transaction.update(userRef, "coinBalance", currentBalance + amount)
+                
+                amount // Return amount added
+            }.await()
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error verifying coupon", e)
+            null
+        }
+    }
+    
+    suspend fun checkDailyLoginBonus(userId: String): Boolean {
+        val userRef = firestore.collection("users").document(userId)
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        
+        return try {
+            firestore.runTransaction { transaction ->
+                val snapshot = transaction.get(userRef)
+                val lastLoginDate = snapshot.getString("lastLoginDate")
+                
+                if (lastLoginDate != today) {
+                    val currentBalance = (snapshot.getLong("coinBalance") ?: 0L).toInt()
+                    transaction.update(userRef, 
+                        mapOf(
+                            "coinBalance" to currentBalance + 1,
+                            "lastLoginDate" to today
+                        )
+                    )
+                    true // Bonus added
+                } else {
+                    false // Already claimed today
+                }
+            }.await() ?: false
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseManager", "Error checking daily bonus", e)
+            false
+        }
     }
 }
 

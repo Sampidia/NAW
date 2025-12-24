@@ -1,12 +1,13 @@
 package com.naijaayo.worldwide
 
-import android.app.Dialog
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -20,7 +21,6 @@ import com.google.firebase.database.ValueEventListener
 import com.naijaayo.worldwide.model.Friend
 import com.naijaayo.worldwide.model.Message
 import com.naijaayo.worldwide.network.FirebaseManager
-
 import com.naijaayo.worldwide.theme.AvatarPreferenceManager
 import kotlinx.coroutines.launch
 
@@ -36,20 +36,6 @@ class ChatDialog(private val friend: Friend) : DialogFragment() {
     private lateinit var friendName: TextView
     private lateinit var messageAdapter: MessageAdapter
     private var messagesListener: ValueEventListener? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setStyle(STYLE_NO_FRAME, android.R.style.Theme_Light_NoTitleBar_Fullscreen)
-    }
-
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val dialog = super.onCreateDialog(savedInstanceState)
-        dialog.window?.setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
-        )
-        return dialog
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -206,11 +192,30 @@ class ChatDialog(private val friend: Friend) : DialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        // Make dialog full screen
-        dialog?.window?.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
+        dialog?.window?.apply {
+            // Set layout to match parent to fill screen
+            setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            // Set the background to be transparent to see the content behind the dialog.
+            setBackgroundDrawableResource(android.R.color.transparent)
+
+            // Handle fullscreen across different API levels
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                setDecorFitsSystemWindows(false)
+                insetsController?.let {
+                    it.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                    it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN
+                )
+            }
+        }
     }
 }
-

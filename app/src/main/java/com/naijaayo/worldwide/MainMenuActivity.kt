@@ -18,8 +18,12 @@ import com.naijaayo.worldwide.FriendsActivity
 import com.naijaayo.worldwide.GameRoomActivity
 import com.bumptech.glide.Glide
 import android.widget.ImageView
+import com.google.android.gms.games.PlayGames
+import com.naijaayo.worldwide.sound.SoundManager
 
 class MainMenuActivity : AppCompatActivity() {
+    private lateinit var soundManager: SoundManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -33,8 +37,13 @@ class MainMenuActivity : AppCompatActivity() {
         val appLogo = findViewById<ImageView>(R.id.appLogo)
         Glide.with(this).load(R.raw.logo_animate).into(appLogo)
 
+        // Initialize SoundManager
+        soundManager = SoundManager(this)
+        soundManager.loadSounds()
+
         // Initialize and start background music
         BackgroundMusicManager.initialize(this)
+        com.naijaayo.worldwide.billing.BillingManager.initialize(this) // Initialize Billing
         Handler().postDelayed({ BackgroundMusicManager.startBackgroundMusic() }, 1000)
 
         findViewById<Button>(R.id.singlePlayerButton).setOnClickListener {
@@ -97,11 +106,51 @@ class MainMenuActivity : AppCompatActivity() {
                 return@launch
             }
 
+            // check coin balance
+            val userProfile = FirebaseManager.getUserProfile(currentUser.uid)
+            val coinBalance = (userProfile?.get("coinBalance") as? Long) ?: 0L
+
+            if (coinBalance < 1) {
+                // Determine logic for when user has 0 coins
+                val dialog = com.naijaayo.worldwide.ui.TopUpDialog(this@MainMenuActivity, 
+                    onBuyCoinClicked = {
+                        val intent = Intent(this@MainMenuActivity, com.naijaayo.worldwide.ui.BuyCoinActivity::class.java)
+                        startActivity(intent)
+                    },
+                    onWatchAdClicked = {
+                        com.naijaayo.worldwide.ads.AdMobHelper.showRewardedAd(this@MainMenuActivity, 
+                            onRewardEarned = { amount ->
+                               lifecycleScope.launch {
+                                   val uid = com.naijaayo.worldwide.network.FirebaseManager.auth.currentUser?.uid
+                                   if (uid != null) {
+                                       val success = com.naijaayo.worldwide.network.FirebaseManager.addCoins(uid, 1) // +1 Coin
+                                       if (success) {
+                                           Toast.makeText(this@MainMenuActivity, "Watched Ad! +1 Coin", Toast.LENGTH_SHORT).show()
+                                       }
+                                   }
+                               }
+                            },
+                            onAdClosed = {
+                                // Optional: Do something when ad closes
+                            }
+                        )
+                    }
+                )
+                dialog.show()
+                return@launch
+            }
+
+            // Deduct coin
+            val success = FirebaseManager.deductCoins(currentUser.uid, 1)
+            if (!success) {
+                 Toast.makeText(this@MainMenuActivity, "Insufficient coins or connection error.", Toast.LENGTH_SHORT).show()
+                 return@launch
+            }
+
             // Fetch user profile for avatar and display name
-            val profile = FirebaseManager.getUserProfile(currentUser.uid)
-            val avatarId = profile?.get("avatarId") as? String ?: "ayo"
-            val displayName = profile?.get("username") as? String 
-                ?: profile?.get("displayName") as? String 
+            val avatarId = userProfile?.get("avatarId") as? String ?: "ayo"
+            val displayName = userProfile?.get("username") as? String 
+                ?: userProfile?.get("displayName") as? String 
                 ?: currentUser.displayName 
                 ?: "Player"
 
@@ -153,6 +202,7 @@ class MainMenuActivity : AppCompatActivity() {
                 is FirebaseManager.MatchResult.Error -> {
                     waitingDialog.dismiss()
                     Toast.makeText(this@MainMenuActivity, "Matchmaking error: ${result.message}", Toast.LENGTH_SHORT).show()
+                    // Refund coin if error? Logic to consider for robust system, skipping for now
                 }
             }
         }
@@ -173,9 +223,50 @@ class MainMenuActivity : AppCompatActivity() {
         NigerianThemeManager.applyThemeToActivity(this)
         BackgroundMusicManager.resumeBackgroundMusic()
         
+        // Sign in to Google Play Games silently
+        val gamesSignInClient = PlayGames.getGamesSignInClient(this)
+        gamesSignInClient.isAuthenticated.addOnCompleteListener { isAuthenticatedTask ->
+            val isAuthenticated = isAuthenticatedTask.isSuccessful && isAuthenticatedTask.result.isAuthenticated
+            if (isAuthenticated) {
+                // Already signed in. The Sidekick overlay will be available.
+            } else {
+                // Not signed in. Try to sign in interactively.
+                gamesSignInClient.signIn().addOnCompleteListener { signInTask ->
+                    if (signInTask.isSuccessful) {
+                        // The Sidekick overlay will appear now for signed-in players.
+                    } else {
+                        // Sign-in failed. The game will continue without Play Games features.
+                    }
+                }
+            }
+        }
+
         // Set user as online when they are actively using the app
         if (FirebaseManager.auth.currentUser != null) {
             FirebaseManager.setUserOnline()
+            
+            // Check Daily Bonus
+            lifecycleScope.launch {
+                val added = FirebaseManager.checkDailyLoginBonus(FirebaseManager.auth.currentUser!!.uid)
+                if (added) {
+                    val dialogView = layoutInflater.inflate(R.layout.dialog_daily_bonus, null)
+                    
+                    // Fallback if layout doesn't exist yet, just Toast
+                    if (dialogView != null) {
+                        val dialog = AlertDialog.Builder(this@MainMenuActivity)
+                            .setView(dialogView)
+                            .create()
+                        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+                        dialogView.findViewById<Button>(R.id.collectButton)?.setOnClickListener { dialog.dismiss() }
+                        dialog.show()
+                        
+                        // Play coin sound
+                        soundManager.playCoinSound()
+                    } else {
+                        Toast.makeText(this@MainMenuActivity, "Daily Bonus! +1 Coin", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
     }
 
@@ -190,5 +281,10 @@ class MainMenuActivity : AppCompatActivity() {
         if (FirebaseManager.auth.currentUser != null) {
             FirebaseManager.setUserOffline()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        soundManager.release()
     }
 }

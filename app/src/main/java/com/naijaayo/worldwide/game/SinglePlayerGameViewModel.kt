@@ -11,10 +11,13 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.random.Random
 
+import android.annotation.SuppressLint
+
 /**
  * ViewModel for single-player Ayo game
  * Uses local game engine instead of network repository
  */
+@SuppressLint("NullSafeMutableLiveData")
 class SinglePlayerGameViewModel : ViewModel() {
 
     private val gameEngine = LocalGameEngine()

@@ -45,11 +45,4 @@ data class LocalGameState(
     }
 }
 
-/**
- * Game difficulty levels
- */
-enum class GameLevel {
-    EASY,    // Capture 2 or 3 seeds
-    MEDIUM,  // Capture 3 seeds
-    HARD     // Capture 4 seeds
-}
+
